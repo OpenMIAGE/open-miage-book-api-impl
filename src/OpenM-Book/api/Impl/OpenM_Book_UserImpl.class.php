@@ -11,11 +11,7 @@ Import::php("OpenM-Book.api.Impl.OpenM_BookCommonsImpl");
  * @subpackage OpenM\OpenM-Book\api\Impl  
  * @author Nicolas Rouzeaud & Gaël SAUNIER
  */
-class OpenM_Book_UserImpl extends OpenM_BookCommonsImpl  implements OpenM_Book_User {
-    
-    const USER_PROPERTY_FIRST_NAME = "first.name";
-    const USER_PROPERTY_LAST_NAME = "last.name";
-    const USER_PROPERTY_PHOTO = "photo";
+class OpenM_Book_UserImpl extends OpenM_BookCommonsImpl implements OpenM_Book_User {
 
     /**
      * @todo Dev & test
@@ -211,7 +207,7 @@ class OpenM_Book_UserImpl extends OpenM_BookCommonsImpl  implements OpenM_Book_U
     }
 
     /**
-     * @todo test not basic
+     * OK
      */
     public function getUserProperties($userId = null, $basicOnly = null) {
         if (!String::isStringOrNull($userId))
@@ -240,7 +236,7 @@ class OpenM_Book_UserImpl extends OpenM_BookCommonsImpl  implements OpenM_Book_U
         } else {
             OpenM_Log::debug("search the targeted user in DAO", __CLASS__, __METHOD__, __LINE__);
             $userDAO = new OpenM_Book_UserDAO();
-            $user = $userDAO->getFromId($userId);
+            $user = $userDAO->get($userId);
             if ($user == null)
                 return $this->error(self::RETURN_ERROR_MESSAGE_USER_NOT_FOUND_VALUE);
             OpenM_Log::debug("the targeted user is found in DAO", __CLASS__, __METHOD__, __LINE__);
@@ -265,26 +261,29 @@ class OpenM_Book_UserImpl extends OpenM_BookCommonsImpl  implements OpenM_Book_U
             OpenM_Log::debug("Check user property in DAO", __CLASS__, __METHOD__, __LINE__);
             $userPropertiesValueDAO = new OpenM_Book_User_Property_ValueDAO();
 
-            if ($isUserCalling)
+            if ($isUserCalling) {
+                OpenM_Log::debug("search my Properties in DAO", __CLASS__, __METHOD__, __LINE__);
                 $values = $userPropertiesValueDAO->getProperties($userId);
-            else
+            } else {
+                OpenM_Log::debug("search Properties from user in DAO", __CLASS__, __METHOD__, __LINE__);
                 $values = $userPropertiesValueDAO->getFromUser($userId, $userIdCalling);
+            }
 
             if ($values != null) {
                 OpenM_Log::debug("Properties found in DAO", __CLASS__, __METHOD__, __LINE__);
-
-                $e = $values->enum();
+                $e = $values->keys();
                 $i = 0;
                 while ($e->hasNext()) {
-                    $value = $e->next();
+                    $key = $e->next();
+                    $value = $values->get($key);
                     $propertyValue = new HashtableString();
-
-                    $propertyValue->put(OpenM_Book::RETURN_USER_PROPERTY_ID_PARAMETER, $value->get(OpenM_Book_User_PropertyDAO::ID));
-                    $propertyValue->put(OpenM_Book::RETURN_USER_PROPERTY_NAME_PARAMETER, $value->get(OpenM_Book_User_PropertyDAO::NAME));
-                    $propertyValue->put(OpenM_Book::RETURN_USER_PROPERTY_VALUE_ID_PARAMETER, $value->get(OpenM_Book_User_Property_ValueDAO::ID));
-                    $propertyValue->put(OpenM_Book::RETURN_USER_PROPERTY_VALUE_PARAMETER, $value->get(OpenM_Book_User_Property_ValueDAO::VALUE));
-
-                    $propertyList->put(($isUserCalling) ? $i : $i, $propertyValue);
+                    $propertyValue->put(self::RETURN_USER_PROPERTY_ID_PARAMETER, $value->get(OpenM_Book_User_PropertyDAO::ID));
+                    $propertyValue->put(self::RETURN_USER_PROPERTY_NAME_PARAMETER, $value->get(OpenM_Book_User_PropertyDAO::NAME));
+                    if ($value->get(OpenM_Book_User_Property_ValueDAO::ID) != "") {
+                        $propertyValue->put(self::RETURN_USER_PROPERTY_VALUE_ID_PARAMETER, $value->get(OpenM_Book_User_Property_ValueDAO::ID));
+                        $propertyValue->put(self::RETURN_USER_PROPERTY_VALUE_PARAMETER, $value->get(OpenM_Book_User_Property_ValueDAO::VALUE));
+                    }
+                    $propertyList->put($i, $propertyValue);
                     $i++;
                 }
                 if ($propertyList->size() > 0)
