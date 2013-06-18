@@ -209,14 +209,6 @@ class OpenM_BookImpl extends OpenM_BookCommonsImpl implements OpenM_Book {
         return $return->put(self::RETURN_COMMUNITY_CHILDS_PARAMETER, $communityList);
     }
 
-    private function isIdValid($propertyId) {
-        if (is_int($propertyId))
-            return true;
-        if (!String::isString($propertyId))
-            return false;
-        return RegExp::preg(OpenM_Groups::ID_PARAMETER_PATERN, "$propertyId");
-    }
-
     /**
      * OK
      * 

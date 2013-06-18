@@ -4,6 +4,7 @@ Import::php("OpenM-Book.api.OpenM_Book_User");
 Import::php("OpenM-Book.api.Impl.OpenM_Book_AdminImpl");
 Import::php("OpenM-Book.api.OpenM_Book_Moderator");
 Import::php("OpenM-Book.api.Impl.OpenM_BookCommonsImpl");
+Import::php("OpenM-Mail.api.OpenM_MailTool");
 
 /**
  * 
@@ -73,11 +74,10 @@ class OpenM_Book_UserImpl extends OpenM_BookCommonsImpl implements OpenM_Book_Us
     }
 
     /**
-     * @todo check dev & test
+     * @todo test
      */
     public function setPropertyValue($propertyValueId, $propertyValue) {
-        OpenM_Log::debug("START setPropertyValue", __CLASS__, __METHOD__, __LINE__);
-        if (!$this->isIdValid($propertyValueId))
+        if (!RegExp::preg("/^-?[0-9]+$/", $propertyValueId) )
             return $this->error("propertyValueId must be an int");
         if (!String::isString($propertyValue))
             return $this->error("propertyValue must be a string");
@@ -87,40 +87,48 @@ class OpenM_Book_UserImpl extends OpenM_BookCommonsImpl implements OpenM_Book_Us
         else
             return $this->error;
 
-        $userId = $user->get(OpenM_Book_UserDAO::ID)->toInt();
-
-        /**
-         * @todo faire difference pour nom/prenom/photo
-         */
-        //verrification de l'appartenance de la property à l'utilisateur
+        $userDAO = new OpenM_Book_UserDAO();
+        $userId = $user->get(OpenM_Book_UserDAO::ID);
 
         switch ($propertyValueId) {
-            case -1:
-
+            case self::FIRST_NAME_PROPERTY_VALUE_ID :
+                if (!RegExp::preg("/^[a-zA-Z]([a-zA-Z]|[ \t])+[a-zA-Z]?$/", OpenM_Book_Tool::strlwr($propertyValue)))
+                    return $this->error("firstName in bad format");
+                $userDAO->update($userId, OpenM_Book_UserDAO::FIRST_NAME, $propertyValue);
                 break;
-            case -2:
-
+            case self::LAST_NAME_PROPERTY_VALUE_ID :
+                if (!RegExp::preg("/^[a-zA-Z]([a-zA-Z]|[ \t])+[a-zA-Z]?$/", OpenM_Book_Tool::strlwr($propertyValue)))
+                    return $this->error("lastName in bad format");
+                $userDAO->update($userId, OpenM_Book_UserDAO::LAST_NAME, $propertyValue);
                 break;
-            case -3:
-
+            case self::PHOTO_ID_PROPERTY_VALUE_ID :
+                if (!$this->isIdValid($propertyValue))
+                    return $this->error("Photo ID not valid");
+                $userDAO->update($userId, OpenM_Book_UserDAO::PHOTO, $propertyValue);
+                break;
+            case self::DEFAULT_EMAIL_PROPERTY_VALUE_ID :
+                if (!OpenM_MailTool::isEMailValid($propertyValue))
+                    return $this->error("mail not valid");
+                $userDAO->update($userId, OpenM_Book_UserDAO::DEFAULT_MAIL, $propertyValue);
+                break;
+            case self::BIRTHDAY_ID_PROPERTY_VALUE_ID :
+                $date = new Date("$propertyValue");
+                if ($date->plus(Delay::years(self::AGE_LIMIT_TO_REGISTER))->compareTo(Date::now()) < 0)
+                    return $this->error("you must be older than " . self::AGE_LIMIT_TO_REGISTER . " years old");
+                $userDAO->update($userId, OpenM_Book_User::BIRTHDAY_ID_PROPERTY_VALUE_ID, $propertyValue);
                 break;
             default:
+                OpenM_Log::debug("default property treatment", __CLASS__, __METHOD__, __LINE__);
                 $propertyValueDAO = new OpenM_Book_User_Property_ValueDAO();
                 $retour = $propertyValueDAO->get($userId, $propertyValueId);
+                OpenM_Log::debug("search property value in DAO", __CLASS__, __METHOD__, __LINE__);
                 if ($retour->size() == 0)
                     return $this->error(self::RETURN_ERROR_MESSAGE_PROPERTY_NOTFOUND_VALUE);
-                //MAJ
+                OpenM_Log::debug("property value found in DAO", __CLASS__, __METHOD__, __LINE__);
                 $propertyValueDAO->update($propertyValueId, $userId, $propertyValue);
-                OpenM_Log::debug("update value : $propertyValueId OK", __CLASS__, __METHOD__, __LINE__);
+                OpenM_Log::debug("property updated in DAO", __CLASS__, __METHOD__, __LINE__);
                 break;
         }
-
-
-
-        $userDAO->updateTime($userId);
-        OpenM_Log::debug("update time of user OK", __CLASS__, __METHOD__, __LINE__);
-
-        OpenM_Log::debug("END setPropertyValue", __CLASS__, __METHOD__, __LINE__);
         return $this->ok();
     }
 
@@ -277,10 +285,10 @@ class OpenM_Book_UserImpl extends OpenM_BookCommonsImpl implements OpenM_Book_Us
                     $key = $e->next();
                     $value = $values->get($key);
                     $propertyValue = new HashtableString();
-                    $propertyValue->put(self::RETURN_USER_PROPERTY_ID_PARAMETER, $value->get(OpenM_Book_User_PropertyDAO::ID));
+                    $propertyValue->put(self::RETURN_USER_PROPERTY_ID_PARAMETER, $value->get(OpenM_Book_User_PropertyDAO::ID)->toInt());
                     $propertyValue->put(self::RETURN_USER_PROPERTY_NAME_PARAMETER, $value->get(OpenM_Book_User_PropertyDAO::NAME));
                     if ($value->get(OpenM_Book_User_Property_ValueDAO::ID) != "") {
-                        $propertyValue->put(self::RETURN_USER_PROPERTY_VALUE_ID_PARAMETER, $value->get(OpenM_Book_User_Property_ValueDAO::ID));
+                        $propertyValue->put(self::RETURN_USER_PROPERTY_VALUE_ID_PARAMETER, $value->get(OpenM_Book_User_Property_ValueDAO::ID)->toInt());
                         $propertyValue->put(self::RETURN_USER_PROPERTY_VALUE_PARAMETER, $value->get(OpenM_Book_User_Property_ValueDAO::VALUE));
                     }
                     $propertyList->put($i, $propertyValue);

@@ -21,6 +21,7 @@ class OpenM_Book_UserDAO extends OpenM_Book_DAO {
     const PHOTO = "photo";
     const BIRTHDAY = "birthday";
     const ACTIVATED = "activated";
+    const DEFAULT_MAIL = "mail_contact_selected";
     const ACTIVE = 1;
 
     /**
@@ -85,14 +86,15 @@ class OpenM_Book_UserDAO extends OpenM_Book_DAO {
         return TRUE;
     }
 
-    public function update($userUID, $setValArray = array()) {
-        if (sizeof($setValArray) == 0)
-            return false;
-        $setValArray[self::UPDATE_TIME] = time();
-        $sql = OpenM_DB::update($this->getTABLE(self::OpenM_Book_User_Table_Name), $setValArray, array(
-                    self::UID => $userUID
-                ));
-        self::$db->request($sql);
+    public function update($userId, $key, $value) {
+        $array = array();
+        $array[self::UPDATE_TIME] = time();
+        if (!is_numeric($value))
+            $value = self::$db->escape($value);
+        $array["$key"] = $value;
+        self::$db->request(OpenM_DB::update($this->getTABLE(self::OpenM_Book_User_Table_Name), $array, array(
+                    self::ID => $userId
+                )));
     }
 
 }

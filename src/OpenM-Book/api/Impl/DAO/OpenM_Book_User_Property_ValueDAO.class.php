@@ -77,8 +77,12 @@ class OpenM_Book_User_Property_ValueDAO extends OpenM_Book_DAO {
     }
 
     public function update($valueID, $userId, $value) {
-        $sql = OpenM_DB::update($this->getTABLE(self::OPENM_BOOK_USER_PROPERTY_VALUE_TABLE_NAME), array(self::VALUE => $value), array(self::ID => $valueID, self::USER_ID => $userId));
-        self::$db->request($sql);
+        self::$db->request(OpenM_DB::update($this->getTABLE(self::OPENM_BOOK_USER_PROPERTY_VALUE_TABLE_NAME), array(
+                    self::VALUE => self::$db->escape($value)
+                        ), array(
+                    self::ID => $valueID,
+                    self::USER_ID => $userId
+                )));
         return TRUE;
     }
 
@@ -143,28 +147,7 @@ class OpenM_Book_User_Property_ValueDAO extends OpenM_Book_DAO {
     }
 
     public function getFromUser($userIdTarget, $userIdCalling) {
-
-        $sql = "SELECT " . self::ID . ", " . self::VALUE . ", p." . OpenM_Book_User_PropertyDAO::ID . ", " . OpenM_Book_User_PropertyDAO::NAME . " "
-                . "FROM " . $this->getTABLE(self::OPENM_BOOK_USER_PROPERTY_VALUE_TABLE_NAME) . " v, " . $this->getTABLE(OpenM_Book_User_PropertyDAO::OPENM_BOOK_USER_PROPERTY_TABLE_NAME) . " p "
-                . "WHERE " . self::USER_ID . " = $userIdTarget AND " . self::ID . " IN ("
-                . "SELECT " . OpenM_Book_User_Property_Value_VisibilityDAO::VALUE_ID . " "
-                . "FROM " . $this->getTABLE(OpenM_Book_User_Property_Value_VisibilityDAO::OpenM_BOOK_USER_PROPERTY_VALUE_VISIBILITY_TABLE_NAME) . " "
-                . "WHERE " . OpenM_Book_User_Property_Value_VisibilityDAO::GROUP_VISIBILITY_ID . " IN ( "
-                . "SELECT " . OpenM_Book_Group_Content_GroupDAO::GROUP_PARENT_ID . " "
-                . "FROM " . $this->getTABLE(OpenM_Book_Group_Content_GroupDAO::OPENM_BOOK_GROUP_CONTENT_GROUP_INDEX_TABLE_NAME) . " "
-                . "WHERE " . OpenM_Book_Group_Content_GroupDAO::GROUP_ID . " IN ( "
-                . "SELECT " . OpenM_Book_Group_Content_UserDAO::GROUP_ID . " "
-                . "FROM " . $this->getTABLE(OpenM_Book_Group_Content_UserDAO::OPENM_BOOK_GROUP_CONTENT_USER_TABLE_NAME) . " "
-                . "WHERE " . OpenM_Book_Group_Content_UserDAO::USER_ID . " = $userIdCalling "
-                . ")"
-                . " UNION "
-                . "SELECT " . OpenM_Book_Group_Content_UserDAO::GROUP_ID . " "
-                . "FROM " . $this->getTABLE(OpenM_Book_Group_Content_UserDAO::OPENM_BOOK_GROUP_CONTENT_USER_TABLE_NAME) . " "
-                . "WHERE " . OpenM_Book_Group_Content_UserDAO::USER_ID . " = $userIdCalling "
-                . ")) "
-                . "AND v." . self::PROPERTY_ID . " = p." . OpenM_Book_User_PropertyDAO::ID
-                . " Order by p." . OpenM_Book_User_PropertyDAO::ID;
-        return self::$db->request_HashtableString($sql, self::ID);
+        return new HashtableString();
     }
 
     public function getSequencePropertyName() {
