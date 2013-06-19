@@ -88,7 +88,7 @@ class OpenM_Book_UserImpl extends OpenM_BookCommonsImpl implements OpenM_Book_Us
             return $this->error;
 
         $userDAO = new OpenM_Book_UserDAO();
-        $userId = $user->get(OpenM_Book_UserDAO::ID);
+        $userId = $user->get(OpenM_Book_UserDAO::ID)->toInt();
 
         switch ($propertyValueId) {
             case self::FIRST_NAME_PROPERTY_VALUE_ID :
@@ -120,8 +120,8 @@ class OpenM_Book_UserImpl extends OpenM_BookCommonsImpl implements OpenM_Book_Us
             default:
                 OpenM_Log::debug("default property treatment", __CLASS__, __METHOD__, __LINE__);
                 $propertyValueDAO = new OpenM_Book_User_Property_ValueDAO();
-                $retour = $propertyValueDAO->get($userId, $propertyValueId);
                 OpenM_Log::debug("search property value in DAO", __CLASS__, __METHOD__, __LINE__);
+                $retour = $propertyValueDAO->get($userId, $propertyValueId);
                 if ($retour->size() == 0)
                     return $this->error(self::RETURN_ERROR_MESSAGE_PROPERTY_NOTFOUND_VALUE);
                 OpenM_Log::debug("property value found in DAO", __CLASS__, __METHOD__, __LINE__);
