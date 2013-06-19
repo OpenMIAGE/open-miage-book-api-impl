@@ -35,6 +35,15 @@ class OpenM_BookCommonsImpl extends OpenM_ServiceSSOImpl {
         }
     }
 
+    
+    protected function isIdValid($propertyId) {
+        if (is_int($propertyId))
+            return true;
+        if (!String::isString($propertyId))
+            return false;
+        return RegExp::preg(OpenM_Groups::ID_PARAMETER_PATERN, "$propertyId");
+    }
+
 }
 
 ?>
