@@ -178,4 +178,22 @@ try {
     OpenM_Log::error("ERROR: " . $e->getMessage(), __CLASS__, __METHOD__, __LINE__);
     echo "ERROR: " . $e->getMessage() . "<br>";
 }
+
+
+try {
+    $id = $me->get(OpenM_Book_User::RETURN_USER_PROPERTY_LIST_PARAMETER)->get(1)->get(OpenM_Book_User::RETURN_USER_PROPERTY_ID_PARAMETER);
+    $me = $bookUserClient->addPropertyValue($id, "add property' @à value");
+    echoH($me, "addPropertyValue($id, 'add property' @à value')");
+} catch (Exception $e) {
+    OpenM_Log::error("ERROR: " . $e->getMessage(), __CLASS__, __METHOD__, __LINE__);
+    echo "ERROR: " . $e->getMessage() . "<br>";
+}
+
+try {
+    $me = $bookUserClient->getUserProperties(null, OpenM_Service::FALSE_PARAMETER_VALUE);
+    echoH($me, "getUserProperties(null, " . OpenM_Service::FALSE_PARAMETER_VALUE . ")");
+} catch (Exception $e) {
+    OpenM_Log::error("ERROR: " . $e->getMessage(), __CLASS__, __METHOD__, __LINE__);
+    echo "ERROR: " . $e->getMessage() . "<br>";
+}
 ?>

@@ -60,63 +60,45 @@ class OpenM_Book_User_Property_ValueDAO extends OpenM_Book_DAO {
 
     public function create($propertyId, $propertyValue, $userID) {
         $newid = $this->sequence->next();
-        $sql = "INSERT INTO " . $this->getTABLE(self::OPENM_BOOK_USER_PROPERTY_VALUE_TABLE_NAME) . " (" . self::ID . "," . self::PROPERTY_ID . "," . self::USER_ID . "," . self::VALUE . ") VALUES ("
-                . "$newid,"
-                . "(SELECT " . OpenM_Book_User_PropertyDAO::ID . " FROM " . $this->getTABLE(OpenM_Book_User_PropertyDAO::OPENM_BOOK_USER_PROPERTY_TABLE_NAME) . " WHERE  " . OpenM_Book_User_PropertyDAO::ID . "=$propertyId  ),"
-                . "$userID,"
-                . "'" . self::$db->escape($propertyValue) . "')";
+        self::$db->request(self::$db->insert($this->getTABLE(self::OPENM_BOOK_USER_PROPERTY_VALUE_TABLE_NAME), array(
+                    self::ID => $newid,
+                    self::PROPERTY_ID => intval($propertyId),
+                    self::USER_ID => intval($userID),
+                    self::VALUE => self::$db->escape($propertyValue)
+                )));
 
-        try {
-            self::$db->request($sql);
-        } catch (OpenM_DBException $e) {
-            $this->sequence->before();
-            return null;
-        }
         $retour = new HashtableString();
-        return $retour->put(self::ID, $newid);
+        return $retour->put(self::ID, $newid)
+                        ->put(self::PROPERTY_ID, $propertyId)
+                        ->put(self::USER_ID, $userID)
+                        ->put(self::VALUE, $propertyValue);
     }
 
-    public function update($valueID, $userId, $value) {
+    public function update($propertyValueId, $value) {
         self::$db->request(OpenM_DB::update($this->getTABLE(self::OPENM_BOOK_USER_PROPERTY_VALUE_TABLE_NAME), array(
                     self::VALUE => self::$db->escape($value)
                         ), array(
-                    self::ID => $valueID,
-                    self::USER_ID => $userId
+                    self::ID => $propertyValueId
                 )));
-        return TRUE;
     }
 
-    public function delete($valueID, $userID) {
-        $sql = OpenM_DB::delete($this->getTABLE(self::OPENM_BOOK_USER_PROPERTY_VALUE_TABLE_NAME), array(
-                    self::ID => $valueID,
-                    self::USER_ID => $userID
-                ));
-        if (self::$db->request($sql))
-            return TRUE;
-        else
-            return FALSE;
+    public function delete($propertyValueId) {
+        self::$db->request(OpenM_DB::delete($this->getTABLE(self::OPENM_BOOK_USER_PROPERTY_VALUE_TABLE_NAME), array(
+                    self::ID => intval($propertyValueId)
+                )));
     }
 
     /**
-     * récupére propertyId, valueId, value, userId à partir d'une valueId
-     * @param int $userID
+     * récupére propertyId, valueId, value, userId à partir d'une valueId    
      * @param int $propertyValueId
      * @return HashtableString
      */
-    public function get($userID, $propertyValueId) {
+    public function get($propertyValueId) {
         return self::$db->request_ArrayList(OpenM_DB::select($this->getTABLE(self::OPENM_BOOK_USER_PROPERTY_VALUE_TABLE_NAME), array(
-                            self::USER_ID => intval($userID),
                             self::ID => intval($propertyValueId)
                         )));
     }
 
-    /**
-     * retourne les propertiétes de l'utilisateur, par son id
-     * peux restreindre les propriétes avec le tableau propertiesList
-     * @param String $userId
-     * @param array $propertiesIdList
-     * @return ArrayList
-     */
     public function getProperties($userId) {
         $sql = "SELECT * FROM (SELECT * FROM ("
                 . "SELECT  p." . OpenM_Book_User_PropertyDAO::ID . " ," . OpenM_Book_User_PropertyDAO::NAME . " , " . self::ID . " ," . self::VALUE
@@ -146,7 +128,9 @@ class OpenM_Book_User_Property_ValueDAO extends OpenM_Book_DAO {
         return $return;
     }
 
-    public function getFromUser($userIdTarget, $userIdCalling) {
+    public function getFromUser($userIdTarget, $userIdCalling = null) {
+        if ($userIdCalling == null)
+            return $this->getProperties($userIdTarget);
         return new HashtableString();
     }
 

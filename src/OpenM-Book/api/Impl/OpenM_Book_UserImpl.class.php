@@ -15,7 +15,7 @@ Import::php("OpenM-Mail.api.OpenM_MailTool");
 class OpenM_Book_UserImpl extends OpenM_BookCommonsImpl implements OpenM_Book_User {
 
     /**
-     * @todo Dev & test
+     * @todo test
      */
     public function addPropertyValue($propertyId, $propertyValue) {
         if (!$this->isIdValid($propertyId))
@@ -28,19 +28,18 @@ class OpenM_Book_UserImpl extends OpenM_BookCommonsImpl implements OpenM_Book_Us
         else
             return $this->error;
 
+        $propertyDAO = new OpenM_Book_User_PropertyDAO();
+        $property = $propertyDAO->getById($propertyId);
+        if ($property == null)
+            return $this->error("propertyId not found");
+
         $userPropertyValueDAO = new OpenM_Book_User_Property_ValueDAO();
-        $newValueId = $userPropertyValueDAO->create($propertyId, $propertyValue, $user->get(OpenM_Book_UserDAO::ID)->toInt());
+        $value = $userPropertyValueDAO->create($propertyId, $propertyValue, $user->get(OpenM_Book_UserDAO::ID)->toInt());
 
-        if (!$newValueId)
-            return $this->error("PropertyId doesn't exist");
-        $newValueId = $newValueId->get(OpenM_Book_User_Property_ValueDAO::ID);
-        OpenM_Log::debug("property : $propertyId with value : $propertyValue is inserted with new id : $newValueId", __CLASS__, __METHOD__, __LINE__);
-        //maj updatetime de l'utilisateur
-
+        $userDAO = new OpenM_Book_UserDAO();
         $userDAO->updateTime($user->get(OpenM_Book_UserDAO::ID)->toInt());
 
-        OpenM_Log::debug("END addPropertyValue", __CLASS__, __METHOD__, __LINE__);
-        return $this->ok()->put(self::RETURN_USER_PROPERTY_VALUE_ID_PARAMETER, $newValueId);
+        return $this->ok()->put(self::RETURN_USER_PROPERTY_VALUE_ID_PARAMETER, $value->get(OpenM_Book_User_Property_ValueDAO::ID));
     }
 
     /**
@@ -74,10 +73,10 @@ class OpenM_Book_UserImpl extends OpenM_BookCommonsImpl implements OpenM_Book_Us
     }
 
     /**
-     * @todo test
+     * OK
      */
     public function setPropertyValue($propertyValueId, $propertyValue) {
-        if (!RegExp::preg("/^-?[0-9]+$/", $propertyValueId) )
+        if (!RegExp::preg("/^-?[0-9]+$/", $propertyValueId))
             return $this->error("propertyValueId must be an int");
         if (!String::isString($propertyValue))
             return $this->error("propertyValue must be a string");
@@ -271,7 +270,7 @@ class OpenM_Book_UserImpl extends OpenM_BookCommonsImpl implements OpenM_Book_Us
 
             if ($isUserCalling) {
                 OpenM_Log::debug("search my Properties in DAO", __CLASS__, __METHOD__, __LINE__);
-                $values = $userPropertiesValueDAO->getProperties($userId);
+                $values = $userPropertiesValueDAO->getFromUser($userId);
             } else {
                 OpenM_Log::debug("search Properties from user in DAO", __CLASS__, __METHOD__, __LINE__);
                 $values = $userPropertiesValueDAO->getFromUser($userId, $userIdCalling);
