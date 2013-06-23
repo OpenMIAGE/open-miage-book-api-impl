@@ -86,6 +86,8 @@ class OpenM_Book_User_Property_ValueDAO extends OpenM_Book_DAO {
         self::$db->request(OpenM_DB::delete($this->getTABLE(self::OPENM_BOOK_USER_PROPERTY_VALUE_TABLE_NAME), array(
                     self::ID => intval($propertyValueId)
                 )));
+
+        //todo : remove visibility of property
     }
 
     /**

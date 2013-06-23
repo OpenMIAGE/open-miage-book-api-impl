@@ -120,11 +120,14 @@ class OpenM_Book_UserImpl extends OpenM_BookCommonsImpl implements OpenM_Book_Us
                 OpenM_Log::debug("default property treatment", __CLASS__, __METHOD__, __LINE__);
                 $propertyValueDAO = new OpenM_Book_User_Property_ValueDAO();
                 OpenM_Log::debug("search property value in DAO", __CLASS__, __METHOD__, __LINE__);
-                $retour = $propertyValueDAO->get($userId, $propertyValueId);
-                if ($retour->size() == 0)
+                $propertyValue = $propertyValueDAO->get($propertyValueId);
+                if ($propertyValue->size() == 0)
                     return $this->error(self::RETURN_ERROR_MESSAGE_PROPERTY_NOTFOUND_VALUE);
+                OpenM_Log::debug("check if property is property of user", __CLASS__, __METHOD__, __LINE__);
+                if ($propertyValue->get(OpenM_Book_User_Property_ValueDAO::USER_ID) != $this->user->get(OpenM_Book_UserDAO::ID))
+                    return $this->error("it's not your property");
                 OpenM_Log::debug("property value found in DAO", __CLASS__, __METHOD__, __LINE__);
-                $propertyValueDAO->update($propertyValueId, $userId, $propertyValue);
+                $propertyValueDAO->update($propertyValueId, $propertyValue);
                 OpenM_Log::debug("property updated in DAO", __CLASS__, __METHOD__, __LINE__);
                 break;
         }
@@ -188,18 +191,17 @@ class OpenM_Book_UserImpl extends OpenM_BookCommonsImpl implements OpenM_Book_Us
             return $this->error;
 
         $userId = $user->get(OpenM_Book_UserDAO::ID)->toInt();
-        //test appartenance prop
-        $propValueDAO = new OpenM_Book_User_Property_ValueDAO();
-        $property = $propValueDAO->get($userId, $propertyValueId);
-        if ($property->size() == 0)
+        $propertyValueDAO = new OpenM_Book_User_Property_ValueDAO();
+        $propertyValue = $propertyValueDAO->get($propertyValueId);
+        if ($propertyValue->size() == 0)
             return $this->error(self::RETURN_ERROR_MESSAGE_PROPERTY_NOTFOUND_VALUE);
+        OpenM_Log::debug("check if it's property of user", __CLASS__, __METHOD__, __LINE__);
+        if ($propertyValue->get(OpenM_Book_User_Property_ValueDAO::USER_ID) != $this->user->get(OpenM_Book_UserDAO::ID))
+            return $this->error("it's not your property");
 
-        OpenM_Log::debug("property $propertyValueId owned by user", __CLASS__, __METHOD__, __LINE__);
-        $propValueDAO->delete($propertyValueId, $userId);
-        OpenM_Log::debug("property deleted", __CLASS__, __METHOD__, __LINE__);
-        $valueGroupDAO = new OpenM_Book_User_Property_Value_VisibilityDAO();
-        $valueGroupDAO->delete($propertyValueId);
-        OpenM_Log::debug("group visibility deleted", __CLASS__, __METHOD__, __LINE__);
+        OpenM_Log::debug("property owned by user", __CLASS__, __METHOD__, __LINE__);
+        $propertyValueDAO->delete($propertyValueId);
+        OpenM_Log::debug("property deleted", __CLASS__, __METHOD__, __LINE__);        
         $userDAO = new OpenM_Book_UserDAO();
         $userDAO->updateTime($userId);
         return $this->ok();
