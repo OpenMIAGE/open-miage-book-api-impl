@@ -96,7 +96,7 @@ class OpenM_Book_User_Property_ValueDAO extends OpenM_Book_DAO {
      * @return HashtableString
      */
     public function get($propertyValueId) {
-        return self::$db->request_ArrayList(OpenM_DB::select($this->getTABLE(self::OPENM_BOOK_USER_PROPERTY_VALUE_TABLE_NAME), array(
+        return self::$db->request_fetch_HashtableString(OpenM_DB::select($this->getTABLE(self::OPENM_BOOK_USER_PROPERTY_VALUE_TABLE_NAME), array(
                             self::ID => intval($propertyValueId)
                         )));
     }
