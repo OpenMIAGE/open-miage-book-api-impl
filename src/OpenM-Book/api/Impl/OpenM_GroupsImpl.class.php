@@ -100,7 +100,7 @@ class OpenM_GroupsImpl extends OpenM_BookCommonsImpl implements OpenM_Groups {
     public function getMyGroups() {
         if (!$this->isUserRegistered())
             return $this->error;
-        
+
         $userId = $this->getManager()->getID();
         $groupContentUserDAO = new OpenM_Book_Group_Content_UserDAO();
         return $this->ok()->put(self::RETURN_GROUP_LIST_PARAMETER, $this->getGroups($groupContentUserDAO->getFromUID($userId, false, true)));
@@ -152,7 +152,7 @@ class OpenM_GroupsImpl extends OpenM_BookCommonsImpl implements OpenM_Groups {
     public function removeGroup($groupId) {
         if (!OpenM_Book_Tool::isGroupIdValid($groupId))
             return $this->error("groupId must be an integer");
-       
+
         if (!$this->isUserRegistered())
             return $this->error;
         else
@@ -174,7 +174,7 @@ class OpenM_GroupsImpl extends OpenM_BookCommonsImpl implements OpenM_Groups {
             return $this->error("groupParentId must be an integer");
         if ($groupId == $groupParentId)
             return $this->error("groupParentId must be different with groupId");
-        
+
         if (!$this->isUserRegistered())
             return $this->error;
         else
@@ -197,7 +197,7 @@ class OpenM_GroupsImpl extends OpenM_BookCommonsImpl implements OpenM_Groups {
             return $this->error("groupId must be an integer");
         if (!OpenM_Book_Tool::isUserIdValid($userId))
             return $this->error("userId must be an integer");
-        
+
         if (!$this->isUserRegistered())
             return $this->error;
 
@@ -260,7 +260,7 @@ class OpenM_GroupsImpl extends OpenM_BookCommonsImpl implements OpenM_Groups {
             $maxNumberResult = $maxNumberResult->toInt();
         else if (is_string($maxNumberResult))
             $maxNumberResult = intval($maxNumberResult);
-        
+
         if (!$this->isUserRegistered())
             return $this->error;
 
@@ -283,7 +283,7 @@ class OpenM_GroupsImpl extends OpenM_BookCommonsImpl implements OpenM_Groups {
     public function getGroupsFromGroup($groupId) {
         if (!OpenM_Book_Tool::isGroupIdValid($groupId))
             return $this->error("groupId must be an integer");
-        
+
         if (!$this->isUserRegistered())
             return $this->error;
         else
@@ -304,7 +304,7 @@ class OpenM_GroupsImpl extends OpenM_BookCommonsImpl implements OpenM_Groups {
     public function getUsersFromGroup($groupId) {
         if (!OpenM_Book_Tool::isGroupIdValid($groupId))
             return $this->error("groupId must be an integer");
-        
+
         if (!$this->isUserRegistered())
             return $this->error;
         else
