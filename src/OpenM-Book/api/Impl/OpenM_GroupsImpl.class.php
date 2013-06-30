@@ -49,11 +49,8 @@ class OpenM_GroupsImpl extends OpenM_BookCommonsImpl implements OpenM_Groups {
             return $this->error(self::RETURN_ERROR_MESSAGE_USER_NOT_FOUND_VALUE);
 
         $groupContentUser = new OpenM_Book_Group_Content_UserDAO();
-        try {
-            $groupContentUser->create($groupId, $userId, true);
-        } catch (OpenM_DBException $e) {
-            return $this->error(self::RETURN_ERROR_MESSAGE_USER_ALREADY_IN_GROUP_VALUE);
-        }
+        $groupContentUser->create($groupId, $userId, true);
+
         return $this->ok();
     }
 
@@ -83,8 +80,12 @@ class OpenM_GroupsImpl extends OpenM_BookCommonsImpl implements OpenM_Groups {
             return $this->error;
 
         $userId = $this->getManager()->getID();
+        OpenM_Log::debug("search my communities in DAO", __CLASS__, __METHOD__, __LINE__);
         $groupContentUserDAO = new OpenM_Book_Group_Content_UserDAO();
-        return $this->ok()->put(self::RETURN_GROUP_LIST_PARAMETER, $this->getGroups($groupContentUserDAO->getFromUID($userId, true, false)));
+        $communities = $groupContentUserDAO->getFromUID($userId, true, false);
+        OpenM_Log::debug("translate communities to return format", __CLASS__, __METHOD__, __LINE__);
+        $return = $this->getGroups($communities);
+        return $this->ok()->put(self::RETURN_GROUP_LIST_PARAMETER, $return);
     }
 
     public function getMyCommunitiesAndGroups() {
@@ -183,12 +184,8 @@ class OpenM_GroupsImpl extends OpenM_BookCommonsImpl implements OpenM_Groups {
         $groupContentGroupDAO = new OpenM_Book_Group_Content_GroupDAO();
         if (!$groupContentGroupDAO->isDescendant($groupParentId, $user->get(OpenM_Book_UserDAO::PERSONAL_GROUPS)))
             return $this->error(self::RETURN_ERROR_MESSAGE_NOT_YOUR_PERSONAL_GROUP_VALUE);
+        $groupContentGroupDAO->delete($groupParentId, $groupId);
 
-        try {
-            $groupContentGroupDAO->delete($groupParentId, $groupId);
-        } catch (OpenM_DBException $e) {
-            return $this->error(self::RETURN_ERROR_MESSAGE_GROUP_NOT_FOUND_IN_GROUP_VALUE);
-        }
         return $this->ok();
     }
 
@@ -206,11 +203,8 @@ class OpenM_GroupsImpl extends OpenM_BookCommonsImpl implements OpenM_Groups {
             return $this->error(self::RETURN_ERROR_MESSAGE_USER_NOT_FOUND_VALUE);
 
         $groupContentUser = new OpenM_Book_Group_Content_UserDAO();
-        try {
-            $groupContentUser->delete($groupId, $userId);
-        } catch (OpenM_DBException $e) {
-            return $this->error(self::RETURN_ERROR_MESSAGE_USER_NOT_FOUND_IN_GROUP_VALUE);
-        }
+        $groupContentUser->delete($groupId, $userId);
+
         return $this->ok();
     }
 
