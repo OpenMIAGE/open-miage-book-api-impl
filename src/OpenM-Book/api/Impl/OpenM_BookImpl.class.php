@@ -345,7 +345,7 @@ class OpenM_BookImpl extends OpenM_BookCommonsImpl implements OpenM_Book {
         $users = $communityContentUserDAO->getUsers($communityId, $start, $numberOfResult);
         $userList = new HashtableString();
         $e = $users->keys();
-        $i = $start;
+        $i = 0;
         while ($e->hasNext()) {
             $user = $users->get($e->next());
             $u = new HashtableString();
@@ -390,7 +390,7 @@ class OpenM_BookImpl extends OpenM_BookCommonsImpl implements OpenM_Book {
         $users = $communityContentUserDAO->getUsers($communityId, $start, $numberOfResult, false);
         $userList = new HashtableString();
         $e = $users->keys();
-        $i = $start;
+        $i = 0;
         while ($e->hasNext()) {
             $user = $users->get($e->next());
             $u = new HashtableString();
