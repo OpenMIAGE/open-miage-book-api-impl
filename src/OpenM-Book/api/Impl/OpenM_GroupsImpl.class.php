@@ -75,16 +75,22 @@ class OpenM_GroupsImpl extends OpenM_BookCommonsImpl implements OpenM_Groups {
                         ->put(self::RETURN_GROUP_TYPE_PARAMETER, $group->get(OpenM_Book_GroupDAO::TYPE));
     }
 
-    public function getMyCommunities() {
+    /**
+     * TODO : getCommunity of another user
+     */
+    public function getCommunities($userId = null) {
         if (!$this->isUserRegistered())
             return $this->error;
+
+        if ($userId !== null)
+            return $this->ok();
 
         $userId = $this->getManager()->getID();
         OpenM_Log::debug("search my communities in DAO", __CLASS__, __METHOD__, __LINE__);
         $groupContentUserDAO = new OpenM_Book_Group_Content_UserDAO();
         $communities = $groupContentUserDAO->getFromUID($userId, true, false);
         OpenM_Log::debug("translate communities to return format", __CLASS__, __METHOD__, __LINE__);
-        $return = $this->getGroups($communities);
+        $return = $this->getGroups($communities, false);
         return $this->ok()->put(self::RETURN_GROUP_LIST_PARAMETER, $return);
     }
 
@@ -107,15 +113,18 @@ class OpenM_GroupsImpl extends OpenM_BookCommonsImpl implements OpenM_Groups {
         return $this->ok()->put(self::RETURN_GROUP_LIST_PARAMETER, $this->getGroups($groupContentUserDAO->getFromUID($userId, false, true)));
     }
 
-    private function getGroups(HashtableString $groupList) {
+    private function getGroups(HashtableString $groupList, $displayType = true) {
         $e = $groupList->enum();
         $return = new HashtableString();
         while ($e->hasNext()) {
             $group = $e->next();
             $g = new HashtableString();
             $g->put(self::RETURN_GROUP_ID_PARAMETER, $group->get(OpenM_Book_GroupDAO::ID))
-                    ->put(self::RETURN_GROUP_NAME_PARAMETER, $group->get(OpenM_Book_GroupDAO::NAME))
-                    ->put(self::RETURN_GROUP_TYPE_PARAMETER, $group->get(OpenM_Book_GroupDAO::TYPE));
+                    ->put(self::RETURN_GROUP_NAME_PARAMETER, $group->get(OpenM_Book_GroupDAO::NAME));
+
+            if ($displayType)
+                $g->put(self::RETURN_GROUP_TYPE_PARAMETER, $group->get(OpenM_Book_GroupDAO::TYPE));
+
             $return->put($group->get(OpenM_Book_GroupDAO::ID), $g);
         }
         return $return;
