@@ -128,9 +128,13 @@ class OpenM_GroupsImpl extends OpenM_BookCommonsImpl implements OpenM_Groups {
         if (!$this->isUserRegistered())
             return $this->error;
 
-        $userId = $this->getManager()->getID();
+        $uid = $this->getManager()->getID();
+        OpenM_Log::debug("search my groups in DAO", __CLASS__, __METHOD__, __LINE__);
         $groupContentUserDAO = new OpenM_Book_Group_Content_UserDAO();
-        return $this->ok()->put(self::RETURN_GROUP_LIST_PARAMETER, $this->getGroups($groupContentUserDAO->getFromUID($userId, false, true)));
+        $groups = $groupContentUserDAO->getFromUID($uid, false, true);
+        OpenM_Log::debug("translate groups to return format", __CLASS__, __METHOD__, __LINE__);
+        $formatedGroups = $this->getGroups($groups);
+        return $this->ok()->put(self::RETURN_GROUP_LIST_PARAMETER, $formatedGroups);
     }
 
     private function getGroups(HashtableString $groupList, $displayType = true) {
@@ -144,7 +148,7 @@ class OpenM_GroupsImpl extends OpenM_BookCommonsImpl implements OpenM_Groups {
                     ->put(self::RETURN_GROUP_NAME_PARAMETER, $group->get(OpenM_Book_GroupDAO::NAME));
 
             if ($displayType)
-                $g->put(self::RETURN_GROUP_TYPE_PARAMETER, $group->get(OpenM_Book_GroupDAO::TYPE));
+                $g->put(self::RETURN_GROUP_TYPE_PARAMETER, $group->get(OpenM_Book_GroupDAO::TYPE)->toInt());
 
             $return->put($i, $g);
             $i++;
