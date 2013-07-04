@@ -306,6 +306,10 @@ class OpenM_Book_UserImpl extends OpenM_BookCommonsImpl implements OpenM_Book_Us
         return $this->ok();
     }
 
+    public function invitPeople($mailJSONList) {
+        return $this->notImplemented();
+    }
+
 }
 
 ?>

@@ -39,9 +39,9 @@ class OpenM_BookImpl extends OpenM_BookCommonsImpl implements OpenM_Book {
         if (!$this->isUserRegistered())
             return $this->error;
 
-        $communitiyToSectionDAO = new OpenM_Book_Community_To_SectionDAO();
-        $communityToSection = $communitiyToSectionDAO->getFromGroup($communityId);
-        if ($communityToSection == null)
+        $sectionDAO = new OpenM_Book_SectionDAO();
+        $section = $sectionDAO->getFromCommunity($communityId);
+        if ($section == null)
             return $this->error("communityId not found");
 
         OpenM_Log::debug("community found in DAO", __CLASS__, __METHOD__, __LINE__);
@@ -50,12 +50,21 @@ class OpenM_BookImpl extends OpenM_BookCommonsImpl implements OpenM_Book {
         if ($communityBannedDAO->isUserBanned($this->user->get(OpenM_Book_UserDAO::ID)->toInt(), $communityId))
             return $this->error("you're banned from this community");
 
+        OpenM_Log::debug("check if user can register in this community", __CLASS__, __METHOD__, __LINE__);
+        if ($section->get(OpenM_Book_SectionDAO::USER_CAN_REGISTER)->toInt() != OpenM_Book_SectionDAO::ACTIVATED)
+            return $this->error("users can't be registered in this community");
+        
+        OpenM_Log::debug("check if validation required on registration in this community", __CLASS__, __METHOD__, __LINE__);
+        $validationRequired = ($section->get(OpenM_Book_SectionDAO::VALIDATION_REQUIRED)->toInt() == OpenM_Book_SectionDAO::ACTIVATED);
+
         $communityUsersDAO = new OpenM_Book_Community_Content_UserDAO();
+        OpenM_Log::debug("check if already registered in this community", __CLASS__, __METHOD__, __LINE__);
         $communityUser = $communityUsersDAO->get($communityId, $this->user->get(OpenM_Book_UserDAO::ID));
         if ($communityUser != null)
             return $this->error("user already in community");
 
-        $communityUsersDAO->create($communityId, $this->user->get(OpenM_Book_UserDAO::ID)->toInt());
+        OpenM_Log::debug("register user in this community", __CLASS__, __METHOD__, __LINE__);
+        $communityUsersDAO->create($communityId, $this->user->get(OpenM_Book_UserDAO::ID)->toInt(), !$validationRequired);
         return $this->ok();
     }
 
@@ -185,8 +194,11 @@ class OpenM_BookImpl extends OpenM_BookCommonsImpl implements OpenM_Book {
             $return->put(self::RETURN_COMMUNITY_CANT_BE_REMOVED_PARAMETER, self::TRUE_PARAMETER_VALUE);
 
         OpenM_Log::debug("Check if can register in community", __CLASS__, __METHOD__, __LINE__);
-        if ($section->get(OpenM_Book_SectionDAO::USER_CAN_REGISTER)->toInt() == OpenM_Book_SectionDAO::ACTIVATED)
+        if ($section->get(OpenM_Book_SectionDAO::USER_CAN_REGISTER)->toInt() == OpenM_Book_SectionDAO::ACTIVATED) {
             $return->put(self::RETURN_USER_CAN_REGISTER_PARAMETER, self::TRUE_PARAMETER_VALUE);
+            if ($section->get(OpenM_Book_SectionDAO::VALIDATION_REQUIRED)->toInt() == OpenM_Book_SectionDAO::ACTIVATED)
+                $return->put(self::RETURN_REGISTRATION_VALIDATION_REQUIRED_PARAMETER, self::TRUE_PARAMETER_VALUE);
+        }
 
         OpenM_Log::debug("recover branch childs from DAO", __CLASS__, __METHOD__, __LINE__);
         $sectionChilds = $sectionDAO->getFromParent($section->get(OpenM_Book_SectionDAO::ID)->toInt());
@@ -420,10 +432,6 @@ class OpenM_BookImpl extends OpenM_BookCommonsImpl implements OpenM_Book {
                         ->put(self::RETURN_USER_LIST_PARAMETER, $userList);
     }
 
-    public function invitPeople($mailJSONList) {
-        return $this->notImplemented();
-    }
-
     public function removeMeFromCommunity($communityId) {
         if (!OpenM_Book_Tool::isGroupIdValid($communityId))
             return $this->error("communityId must be in a valid format");
@@ -449,7 +457,6 @@ class OpenM_BookImpl extends OpenM_BookCommonsImpl implements OpenM_Book {
 
     public function voteForUser($userId, $communityId, $raison = null) {
         return $this->notImplemented();
-        
     }
 
 }
