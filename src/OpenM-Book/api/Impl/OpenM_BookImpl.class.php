@@ -8,7 +8,19 @@ Import::php("OpenM-Book.api.Impl.OpenM_BookCommonsImpl");
 /**
  * 
  * @package OpenM 
- * @subpackage OpenM\OpenM-Book\api\Impl  
+ * @subpackage OpenM\OpenM-Book\api\Impl
+ * @license http://www.apache.org/licenses/LICENSE-2.0 Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * @link http://www.open-miage.org
  * @author Nicolas Rouzeaud & Gaël SAUNIER
  */
 class OpenM_BookImpl extends OpenM_BookCommonsImpl implements OpenM_Book {
@@ -340,12 +352,17 @@ class OpenM_BookImpl extends OpenM_BookCommonsImpl implements OpenM_Book {
         if (!$this->isUserRegistered())
             return $this->error;
 
+        $communityBannedDAO = new OpenM_Book_Community_Banned_UsersDAO();
+        OpenM_Log::debug("check if user is banned of community", __CLASS__, __METHOD__, __LINE__);
+        if ($communityBannedDAO->isUserBanned($this->user->get(OpenM_Book_UserDAO::ID)->toInt(), $communityId))
+            return $this->ok()->put(self::RETURN_YOU_ARE_BANNED_PARAMETER, self::TRUE_PARAMETER_VALUE);
+
         OpenM_Log::debug("search users valid in DAO", __CLASS__, __METHOD__, __LINE__);
         $communityContentUserDAO = new OpenM_Book_Community_Content_UserDAO();
         $users = $communityContentUserDAO->getUsers($communityId, $start, $numberOfResult);
         $userList = new HashtableString();
         $e = $users->keys();
-        $i = $start;
+        $i = 0;
         while ($e->hasNext()) {
             $user = $users->get($e->next());
             $u = new HashtableString();
@@ -385,12 +402,17 @@ class OpenM_BookImpl extends OpenM_BookCommonsImpl implements OpenM_Book {
         if (!$this->isUserRegistered())
             return $this->error;
 
+        $communityBannedDAO = new OpenM_Book_Community_Banned_UsersDAO();
+        OpenM_Log::debug("check if user is banned of community", __CLASS__, __METHOD__, __LINE__);
+        if ($communityBannedDAO->isUserBanned($this->user->get(OpenM_Book_UserDAO::ID)->toInt(), $communityId))
+            return $this->ok()->put(self::RETURN_YOU_ARE_BANNED_PARAMETER, self::TRUE_PARAMETER_VALUE);
+
         OpenM_Log::debug("search users valid in DAO", __CLASS__, __METHOD__, __LINE__);
         $communityContentUserDAO = new OpenM_Book_Community_Content_UserDAO();
         $users = $communityContentUserDAO->getUsers($communityId, $start, $numberOfResult, false);
         $userList = new HashtableString();
         $e = $users->keys();
-        $i = $start;
+        $i = 0;
         while ($e->hasNext()) {
             $user = $users->get($e->next());
             $u = new HashtableString();
