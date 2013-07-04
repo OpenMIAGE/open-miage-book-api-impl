@@ -23,6 +23,9 @@ Import::php("OpenM-Book.api.Impl.OpenM_BookCommonsImpl");
  */
 class OpenM_Book_ModeratorImpl extends OpenM_BookCommonsImpl implements OpenM_Book_Moderator {
 
+    private $isAdmin = false;
+    private $isModerator = false;
+
     private function hasEnoughRights($communityId) {
         if (!$this->isUserRegistered())
             return false;
@@ -37,8 +40,10 @@ class OpenM_Book_ModeratorImpl extends OpenM_BookCommonsImpl implements OpenM_Bo
                 $this->error = $this->error(self::RETURN_ERROR_MESSAGE_NOT_ENOUGH_RIGHTS_VALUE);
                 return false;
             }
+            $this->isAdmin = true;
             OpenM_Log::debug("user is administrator", __CLASS__, __METHOD__, __LINE__);
         }
+        $this->isModerator = true;
         return true;
     }
 
@@ -94,6 +99,13 @@ class OpenM_Book_ModeratorImpl extends OpenM_BookCommonsImpl implements OpenM_Bo
 
         if (!$this->hasEnoughRights($communityId))
             return $this->error;
+
+        OpenM_Log::debug("Check if newName respect RegExp constraints", __CLASS__, __METHOD__, __LINE__);
+        $sectionDAO = new OpenM_Book_SectionDAO();
+        $section = $sectionDAO->getFromCommunity($communityId);
+        OpenM_Log::debug("Constraints : '$newName' / '^" . $section->get(OpenM_Book_SectionDAO::REG_EXP) . "$'", __CLASS__, __METHOD__, __LINE__);
+        if (!$this->isAdmin && !RegExp::ereg("^".$section->get(OpenM_Book_SectionDAO::REG_EXP)."$", $newName))
+            return $this->error("you must respect names' constraints : " . $section->get(OpenM_Book_SectionDAO::REG_EXP));
 
         $groupDAO = new OpenM_Book_GroupDAO();
         OpenM_Log::debug("update name of community", __CLASS__, __METHOD__, __LINE__);
