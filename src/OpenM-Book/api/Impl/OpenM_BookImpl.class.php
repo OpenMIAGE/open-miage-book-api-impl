@@ -223,7 +223,6 @@ class OpenM_BookImpl extends OpenM_BookCommonsImpl implements OpenM_Book {
 
     /**
      * OK
-     * 
      */
     public function addCommunity($name, $communityParentId) {
         if (!String::isString($name))
@@ -316,14 +315,6 @@ class OpenM_BookImpl extends OpenM_BookCommonsImpl implements OpenM_Book {
     }
 
     public function getCommunityParent($communityId) {
-        if (!OpenM_Book_Tool::isGroupIdValid($communityId))
-            return $this->error("communityId must be in a valid format");
-        if (String::isString($communityId))
-            $communityId = intval("$communityId");
-
-        if (!$this->isUserRegistered())
-            return $this->error;
-
         return $this->notImplemented();
     }
 
@@ -433,16 +424,32 @@ class OpenM_BookImpl extends OpenM_BookCommonsImpl implements OpenM_Book {
         return $this->notImplemented();
     }
 
-    public function removeMeFromCommunity($communistyId) {
-        return $this->notImplemented();
+    public function removeMeFromCommunity($communityId) {
+        if (!OpenM_Book_Tool::isGroupIdValid($communityId))
+            return $this->error("communityId must be in a valid format");
+        if (String::isString($communityId))
+            $communityId = intval("$communityId");
+
+        if (!$this->isUserRegistered())
+            return $this->error;
+
+        OpenM_Log::debug("check if user is registered in community", __CLASS__, __METHOD__, __LINE__);
+        $communityContentUser = new OpenM_Book_Community_Content_UserDAO();
+        $userInCommunity = $communityContentUser->get($communityId, $this->user->get(OpenM_Book_UserDAO::ID)->toInt());
+        if ($userInCommunity == null)
+            return $this->ok();
+        OpenM_Log::debug("un register user from community", __CLASS__, __METHOD__, __LINE__);
+        $communityContentUser->delete($communityId, $this->user->get(OpenM_Book_UserDAO::ID)->toInt());
+        return $this->ok();
     }
 
     public function signal($url, $message, $type = self::SIGNAL_TYPE_BUG, $id = null) {
         return $this->notImplemented();
     }
 
-    public function validateUser($userId, $communityId) {
+    public function voteForUser($userId, $communityId, $raison = null) {
         return $this->notImplemented();
+        
     }
 
 }

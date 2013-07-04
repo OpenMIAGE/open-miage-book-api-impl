@@ -20,11 +20,11 @@ class OpenM_Book_Community_Content_UserDAO extends OpenM_Book_DAO {
     const VALIDATED = 1;
     const NOT_VALIDATED = 0;
 
-    public function create($groupId, $userId, $isValid = false) {
+    public function create($communityId, $userId, $isValid = false) {
         $time = time();
 
         $array = array(
-            self::COMMUNITY_ID => intval($groupId),
+            self::COMMUNITY_ID => intval($communityId),
             self::USER_ID => intval($userId),
             self::IS_VALIDATED => (($isValid) ? 1 : 0),
             self::CREATION_TIME => $time
@@ -36,23 +36,23 @@ class OpenM_Book_Community_Content_UserDAO extends OpenM_Book_DAO {
         self::$db->request(OpenM_DB::insert($this->getTABLE(self::OPENM_BOOK_COMMUNITY_CONTENT_USER_TABLE_NAME), $array));
 
         $return = new HashtableString();
-        return $return->put(self::COMMUNITY_ID, $groupId)
+        return $return->put(self::COMMUNITY_ID, $communityId)
                         ->put(self::USER_ID, $userId)
                         ->put(self::CREATION_TIME, $time)
                         ->put(self::IS_VALIDATED, $isValid)
                         ->put(self::VALIDATION_TIME, ($isValid) ? $time : null);
     }
 
-    public function delete($groupId, $userId) {
+    public function delete($communityId, $userId) {
         self::$db->request(OpenM_DB::delete($this->getTABLE(self::OPENM_BOOK_COMMUNITY_CONTENT_USER_TABLE_NAME), array(
                     self::USER_ID => intval($userId),
-                    self::COMMUNITY_ID => intval($groupId)
+                    self::COMMUNITY_ID => intval($communityId)
                 )));
     }
 
-    public function deleteFromGroup($groupId) {
+    public function deleteFromCommunity($communityId) {
         self::$db->request(OpenM_DB::delete($this->getTABLE(self::OPENM_BOOK_COMMUNITY_CONTENT_USER_TABLE_NAME), array(
-                    self::COMMUNITY_ID => intval($groupId)
+                    self::COMMUNITY_ID => intval($communityId)
                 )));
     }
 

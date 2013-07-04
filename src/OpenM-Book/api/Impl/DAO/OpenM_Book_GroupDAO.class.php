@@ -58,7 +58,7 @@ class OpenM_Book_GroupDAO extends OpenM_Book_DAO {
     public function get($groupId) {
         return self::$db->request_fetch_HashtableString(OpenM_DB::select($this->getTABLE(self::OpenM_BOOK_GROUP_TABLE_NAME), array(
                             self::ID => intval($groupId),
-                        )));
+        )));
     }
 
     /**
@@ -113,7 +113,7 @@ class OpenM_Book_GroupDAO extends OpenM_Book_DAO {
     public function delete($groupId, $cascade = true) {
         self::$db->request(OpenM_DB::delete($this->getTABLE(self::OpenM_BOOK_GROUP_TABLE_NAME), array(
                     self::ID => intval($groupId)
-                )));
+        )));
 
         if ($cascade) {
             $groupContentGroupDAO = new OpenM_Book_Group_Content_GroupDAO();
@@ -124,24 +124,24 @@ class OpenM_Book_GroupDAO extends OpenM_Book_DAO {
 
             $communityBannedDAO = new OpenM_Book_Community_Banned_UsersDAO();
             $communityBannedDAO->deleteFromCommunity($groupId);
-            
+
             $groupContentUserDAO = new OpenM_Book_Group_Content_UserDAO();
             $groupContentUserDAO->deleteFromGroup($groupId);
 
             $communityContentUserDAO = new OpenM_Book_Community_Content_UserDAO();
-            $communityContentUserDAO->deleteFromGroup($groupId);
+            $communityContentUserDAO->deleteFromCommunity($groupId);
 
             $communityContentUserValidationDAO = new OpenM_Book_Community_Content_User_ValidationDAO();
-            $communityContentUserValidationDAO->deleteFromGroup($groupId);
+            $communityContentUserValidationDAO->deleteFromCommunity($groupId);
 
             $communityPeriod = new OpenM_Book_Community_PeriodDAO();
-            $communityPeriod->deleteFromGroup($groupId);
+            $communityPeriod->deleteFromCommunity($groupId);
 
             $communityToSection = new OpenM_Book_Community_To_SectionDAO();
             $communityToSection->delete($groupId);
 
             $communityVisibility = new OpenM_Book_Community_VisibilityDAO();
-            $communityVisibility->deleteFromGroup($groupId);
+            $communityVisibility->deleteFromCommunity($groupId);
 
             $searchDAO = new OpenM_Book_SearchDAO();
             $searchDAO->deleteFromGroup($groupId);

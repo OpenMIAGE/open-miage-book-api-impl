@@ -75,26 +75,6 @@ class OpenM_Book_ModeratorImpl extends OpenM_BookCommonsImpl implements OpenM_Bo
         return $this->ok();
     }
 
-    public function addCommunityModerator($userId, $communityId, $validity = null) {
-        return $this->notImplemented();
-    }
-
-    public function blockUserRegistry($userId, $communityId) {
-        return $this->notImplemented();
-    }
-
-    public function getCommunityModerators($communityId) {
-        return $this->notImplemented();
-    }
-
-    public function removeCommunityModerartor($userId, $communityId) {
-        return $this->notImplemented();
-    }
-
-    public function removeCommunityUser($userId, $communityId) {
-        return $this->notImplemented();
-    }
-
     /**
      * OK
      */
@@ -130,6 +110,29 @@ class OpenM_Book_ModeratorImpl extends OpenM_BookCommonsImpl implements OpenM_Bo
         return $this->ok();
     }
 
+    public function validateUser($userId, $communityId) {
+        return $this->notImplemented();        
+    }
+    
+    public function addCommunityModerator($userId, $communityId, $validity = null) {
+        return $this->notImplemented();
+    }
+
+    public function banUserFromCommunity($userId, $communityId) {
+        return $this->notImplemented();
+    }
+
+    public function getCommunityModerators($communityId) {
+        return $this->notImplemented();
+    }
+
+    public function removeCommunityModerartor($userId, $communityId) {
+        return $this->notImplemented();
+    }
+
+    public function removeCommunityUser($userId, $communityId) {
+        return $this->notImplemented();
+    }
 }
 
 ?>

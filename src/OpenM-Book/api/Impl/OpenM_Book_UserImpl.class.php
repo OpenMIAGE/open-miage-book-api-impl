@@ -27,7 +27,7 @@ Import::php("OpenM-Mail.api.OpenM_MailTool");
 class OpenM_Book_UserImpl extends OpenM_BookCommonsImpl implements OpenM_Book_User {
 
     /**
-     * @todo test
+     * OK
      */
     public function addPropertyValue($propertyId, $propertyValue) {
         if (!$this->isIdValid($propertyId))
@@ -265,7 +265,6 @@ class OpenM_Book_UserImpl extends OpenM_BookCommonsImpl implements OpenM_Book_Us
 
     /**
      * OK
-     * 
      */
     public function registerMe($firstName, $lastName, $birthDay) {
         if (!String::isString($firstName))
