@@ -23,6 +23,25 @@ Import::php("OpenM-Book.api.Impl.OpenM_BookCommonsImpl");
  */
 class OpenM_Book_ModeratorImpl extends OpenM_BookCommonsImpl implements OpenM_Book_Moderator {
 
+    private function hasEnoughRights($communityId) {
+        if (!$this->isUserRegistered())
+            return false;
+        OpenM_Log::debug("check if user is moderator of community", __CLASS__, __METHOD__, __LINE__);
+        $communityModeratorDAO = new OpenM_Book_Community_ModeratorDAO();
+        if (!$communityModeratorDAO->isUserModerator($this->user->get(OpenM_Book_UserDAO::ID)->toInt(), $communityId)) {
+            OpenM_Log::debug("user is not moderator of community", __CLASS__, __METHOD__, __LINE__);
+            $adminDAO = new OpenM_Book_AdminDAO();
+            OpenM_Log::debug("check if user is administrator", __CLASS__, __METHOD__, __LINE__);
+            $admin = $adminDAO->get($this->user->get(OpenM_Book_UserDAO::UID)->toInt());
+            if ($admin == null) {
+                $this->error = $this->error(self::RETURN_ERROR_MESSAGE_NOT_ENOUGH_RIGHTS_VALUE);
+                return false;
+            }
+            OpenM_Log::debug("user is administrator", __CLASS__, __METHOD__, __LINE__);
+        }
+        return true;
+    }
+
     /**
      * OK 
      */
@@ -32,22 +51,8 @@ class OpenM_Book_ModeratorImpl extends OpenM_BookCommonsImpl implements OpenM_Bo
         if (String::isString($communityId))
             $communityId = intval("$communityId");
 
-        if (!$this->isUserRegistered())
+        if (!$this->hasEnoughRights($communityId))
             return $this->error;
-        else
-            $user = $this->user;
-
-        OpenM_Log::debug("check if user is moderator of community", __CLASS__, __METHOD__, __LINE__);
-        $communityModeratorDAO = new OpenM_Book_Community_ModeratorDAO();
-        if (!$communityModeratorDAO->isUserModerator($user->get(OpenM_Book_UserDAO::ID)->toInt(), $communityId)) {
-            OpenM_Log::debug("user is not moderator of community", __CLASS__, __METHOD__, __LINE__);
-            $adminDAO = new OpenM_Book_AdminDAO();
-            OpenM_Log::debug("check if user is administrator", __CLASS__, __METHOD__, __LINE__);
-            $admin = $adminDAO->get($user->get(OpenM_Book_UserDAO::UID)->toInt());
-            if ($admin == null)
-                return $this->error(self::RETURN_ERROR_MESSAGE_NOT_ENOUGH_RIGHTS_VALUE);
-            OpenM_Log::debug("user is administrator", __CLASS__, __METHOD__, __LINE__);
-        }
 
         OpenM_Log::debug("check if community contains users", __CLASS__, __METHOD__, __LINE__);
         $communityContentUserDAO = new OpenM_Book_Community_Content_UserDAO();
@@ -60,6 +65,7 @@ class OpenM_Book_ModeratorImpl extends OpenM_BookCommonsImpl implements OpenM_Bo
             return $this->error("community must not contain community descendant");
 
         OpenM_Log::debug("recover moderator group of community", __CLASS__, __METHOD__, __LINE__);
+        $communityModeratorDAO = new OpenM_Book_Community_ModeratorDAO();
         $moderator = $communityModeratorDAO->getFromCommunity($communityId);
         OpenM_Log::debug("recover banned group of community", __CLASS__, __METHOD__, __LINE__);
         $bannedGroupDAO = new OpenM_Book_Community_Banned_UsersDAO();
@@ -86,22 +92,8 @@ class OpenM_Book_ModeratorImpl extends OpenM_BookCommonsImpl implements OpenM_Bo
         if (!String::isString($newName))
             return $this->error("newName must be a String");
 
-        if (!$this->isUserRegistered())
+        if (!$this->hasEnoughRights($communityId))
             return $this->error;
-        else
-            $user = $this->user;
-
-        OpenM_Log::debug("check if user is moderator of community", __CLASS__, __METHOD__, __LINE__);
-        $communityModeratorDAO = new OpenM_Book_Community_ModeratorDAO();
-        if (!$communityModeratorDAO->isUserModerator($user->get(OpenM_Book_UserDAO::ID)->toInt(), $communityId)) {
-            OpenM_Log::debug("user is not moderator of community", __CLASS__, __METHOD__, __LINE__);
-            $adminDAO = new OpenM_Book_AdminDAO();
-            OpenM_Log::debug("check if user is administrator", __CLASS__, __METHOD__, __LINE__);
-            $admin = $adminDAO->get($user->get(OpenM_Book_UserDAO::UID)->toInt());
-            if ($admin == null)
-                return $this->error(self::RETURN_ERROR_MESSAGE_NOT_ENOUGH_RIGHTS_VALUE);
-            OpenM_Log::debug("user is administrator", __CLASS__, __METHOD__, __LINE__);
-        }
 
         $groupDAO = new OpenM_Book_GroupDAO();
         OpenM_Log::debug("update name of community", __CLASS__, __METHOD__, __LINE__);
@@ -111,9 +103,9 @@ class OpenM_Book_ModeratorImpl extends OpenM_BookCommonsImpl implements OpenM_Bo
     }
 
     public function validateUser($userId, $communityId) {
-        return $this->notImplemented();        
+        return $this->notImplemented();
     }
-    
+
     public function addCommunityModerator($userId, $communityId, $validity = null) {
         return $this->notImplemented();
     }
@@ -133,6 +125,7 @@ class OpenM_Book_ModeratorImpl extends OpenM_BookCommonsImpl implements OpenM_Bo
     public function removeCommunityUser($userId, $communityId) {
         return $this->notImplemented();
     }
+
 }
 
 ?>
