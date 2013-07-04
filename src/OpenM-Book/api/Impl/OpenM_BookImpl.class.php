@@ -352,6 +352,11 @@ class OpenM_BookImpl extends OpenM_BookCommonsImpl implements OpenM_Book {
         if (!$this->isUserRegistered())
             return $this->error;
 
+        $communityBannedDAO = new OpenM_Book_Community_Banned_UsersDAO();
+        OpenM_Log::debug("check if user is banned of community", __CLASS__, __METHOD__, __LINE__);
+        if ($communityBannedDAO->isUserBanned($this->user->get(OpenM_Book_UserDAO::ID)->toInt(), $communityId))
+            return $this->ok()->put(self::RETURN_YOU_ARE_BANNED_PARAMETER, self::TRUE_PARAMETER_VALUE);
+
         OpenM_Log::debug("search users valid in DAO", __CLASS__, __METHOD__, __LINE__);
         $communityContentUserDAO = new OpenM_Book_Community_Content_UserDAO();
         $users = $communityContentUserDAO->getUsers($communityId, $start, $numberOfResult);
@@ -396,6 +401,11 @@ class OpenM_BookImpl extends OpenM_BookCommonsImpl implements OpenM_Book {
 
         if (!$this->isUserRegistered())
             return $this->error;
+
+        $communityBannedDAO = new OpenM_Book_Community_Banned_UsersDAO();
+        OpenM_Log::debug("check if user is banned of community", __CLASS__, __METHOD__, __LINE__);
+        if ($communityBannedDAO->isUserBanned($this->user->get(OpenM_Book_UserDAO::ID)->toInt(), $communityId))
+            return $this->ok()->put(self::RETURN_YOU_ARE_BANNED_PARAMETER, self::TRUE_PARAMETER_VALUE);
 
         OpenM_Log::debug("search users valid in DAO", __CLASS__, __METHOD__, __LINE__);
         $communityContentUserDAO = new OpenM_Book_Community_Content_UserDAO();
