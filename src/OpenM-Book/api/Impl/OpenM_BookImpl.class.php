@@ -53,7 +53,7 @@ class OpenM_BookImpl extends OpenM_BookCommonsImpl implements OpenM_Book {
         OpenM_Log::debug("check if user can register in this community", __CLASS__, __METHOD__, __LINE__);
         if ($section->get(OpenM_Book_SectionDAO::USER_CAN_REGISTER)->toInt() != OpenM_Book_SectionDAO::ACTIVATED)
             return $this->error("users can't be registered in this community");
-        
+
         OpenM_Log::debug("check if validation required on registration in this community", __CLASS__, __METHOD__, __LINE__);
         $validationRequired = ($section->get(OpenM_Book_SectionDAO::VALIDATION_REQUIRED)->toInt() == OpenM_Book_SectionDAO::ACTIVATED);
 
@@ -319,8 +319,8 @@ class OpenM_BookImpl extends OpenM_BookCommonsImpl implements OpenM_Book {
             $key = $e->next();
             $ancestor = $ancestors->get($key);
             $a = new HashtableString();
-            $return->put($key, $a->put(self::RETURN_COMMUNITY_ID_PARAMETER, $ancestor->get(OpenM_Book_Group_Content_GroupDAO::GROUP_ID))
-                            ->put(self::RETURN_COMMUNITY_PARENT_PARAMETER, $ancestor->get(OpenM_Book_Group_Content_GroupDAO::GROUP_PARENT_ID))
+            $return->put($key, $a->put(self::RETURN_COMMUNITY_ID_PARAMETER, $ancestor->get(OpenM_Book_Group_Content_GroupDAO::GROUP_ID)->toInt())
+                            ->put(self::RETURN_COMMUNITY_PARENT_PARAMETER, $ancestor->get(OpenM_Book_Group_Content_GroupDAO::GROUP_PARENT_ID)->toInt())
                             ->put(self::RETURN_COMMUNITY_NAME_PARAMETER, $ancestor->get(OpenM_Book_GroupDAO::NAME), $a));
         }
         return $return;
@@ -364,10 +364,10 @@ class OpenM_BookImpl extends OpenM_BookCommonsImpl implements OpenM_Book {
         $communityContentUserDAO = new OpenM_Book_Community_Content_UserDAO();
         $users = $communityContentUserDAO->getUsers($communityId, $start, $numberOfResult);
         $userList = new HashtableString();
-        $e = $users->keys();
+        $e = $users->enum();
         $i = 0;
         while ($e->hasNext()) {
-            $user = $users->get($e->next());
+            $user = $e->next();
             $u = new HashtableString();
             $u->put(self::RETURN_USER_ID_PARAMETER, $user->get(OpenM_Book_UserDAO::ID))
                     ->put(self::RETURN_USER_NAME_PARAMETER, $user->get(OpenM_Book_UserDAO::FIRST_NAME) . " " . $user->get(OpenM_Book_UserDAO::LAST_NAME));
@@ -412,17 +412,18 @@ class OpenM_BookImpl extends OpenM_BookCommonsImpl implements OpenM_Book {
 
         OpenM_Log::debug("search users valid in DAO", __CLASS__, __METHOD__, __LINE__);
         $communityContentUserDAO = new OpenM_Book_Community_Content_UserDAO();
-        $users = $communityContentUserDAO->getUsers($communityId, $start, $numberOfResult, false);
+        $users = $communityContentUserDAO->getUsers($communityId, $start, $numberOfResult, false, $this->user->get(OpenM_Book_UserDAO::ID)->toInt());
         $userList = new HashtableString();
-        $e = $users->keys();
+        $e = $users->enum();
         $i = 0;
         while ($e->hasNext()) {
-            $user = $users->get($e->next());
+            $user = $e->next();
             $u = new HashtableString();
             $u->put(self::RETURN_USER_ID_PARAMETER, $user->get(OpenM_Book_UserDAO::ID)->toInt())
                     ->put(self::RETURN_USER_NAME_PARAMETER, $user->get(OpenM_Book_UserDAO::FIRST_NAME) . " " . $user->get(OpenM_Book_UserDAO::LAST_NAME))
                     ->put(self::RETURN_COMMUNITY_ID_PARAMETER, $user->get(OpenM_Book_Community_Content_UserDAO::COMMUNITY_ID)->toInt())
-                    ->put(self::RETURN_COMMUNITY_NAME_PARAMETER, $user->get(OpenM_Book_GroupDAO::NAME));
+                    ->put(self::RETURN_COMMUNITY_NAME_PARAMETER, $user->get(OpenM_Book_GroupDAO::NAME))
+                    ->put(self::RETURN_COMMUNITY_USER_ALREADY_ACCEPTED_BY_YOU, $user->get(OpenM_Book_Community_Content_UserDAO::NB_ACCEPTED)->toInt());
             $userList->put($i, $u);
             $i++;
         }
@@ -451,11 +452,46 @@ class OpenM_BookImpl extends OpenM_BookCommonsImpl implements OpenM_Book {
         return $this->ok();
     }
 
-    public function signal($url, $message, $type = self::SIGNAL_TYPE_BUG, $id = null) {
-        return $this->notImplemented();
+    public function voteForUser($userId, $communityId, $reason = null) {
+        if (!OpenM_Book_Tool::isGroupIdValid($communityId))
+            return $this->error("communityId must be in a valid format");
+        if (String::isString($communityId))
+            $communityId = intval("$communityId");
+        if (!OpenM_Book_Tool::isUserIdValid($userId))
+            return $this->error("userId must be in a valid format");
+        if (String::isString($userId))
+            $userId = intval("$userId");
+        if (!String::isStringOrNull($reason))
+            return $this->error("reason must be a string");
+
+        if (!$this->isUserRegistered())
+            return $this->error;
+
+        if ($this->user->get(OpenM_Book_UserDAO::ID)->toInt() == $userId)
+            return $this->error("You can't validate yourself");
+
+        OpenM_Log::debug("check if user selected is not valid in this community", __CLASS__, __METHOD__, __LINE__);
+        $groupContentUserDAO = new OpenM_Book_Group_Content_UserDAO();
+        if (!$groupContentUserDAO->isUserInGroups($userId, array($communityId), false, false, true))
+            return $this->error("this user doesn't required a validation in this community");
+
+        OpenM_Log::debug("check if i'm moderator of community or admin", __CLASS__, __METHOD__, __LINE__);
+        $communityModeratorDAO = new OpenM_Book_Community_ModeratorDAO();
+        $adminDAO = new OpenM_Book_AdminDAO();
+        if ($communityModeratorDAO->isUserModerator($this->user->get(OpenM_Book_UserDAO::ID)->toInt(), $communityId) || $adminDAO->get($this->user->get(OpenM_Book_UserDAO::UID)) != null) {
+            $communityContentUserDAO = new OpenM_Book_Community_Content_UserDAO();
+            OpenM_Log::debug("i'm moderator or admin, so, i validate user selected in this community", __CLASS__, __METHOD__, __LINE__);
+            $communityContentUserDAO->update($communityId, $userId, true);
+        }
+
+        $userValidationDAO = new OpenM_Book_Community_Content_User_ValidationDAO();
+        OpenM_Log::debug("create validation comment in DAO", __CLASS__, __METHOD__, __LINE__);
+        $userValidationDAO->create($communityId, $userId, $this->user->get(OpenM_Book_UserDAO::ID)->toInt(), $reason);
+
+        return $this->ok();
     }
 
-    public function voteForUser($userId, $communityId, $raison = null) {
+    public function signal($url, $message, $type = self::SIGNAL_TYPE_BUG, $id = null) {
         return $this->notImplemented();
     }
 
