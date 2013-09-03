@@ -44,7 +44,7 @@ class OpenM_Book_Community_VisibilityDAO extends OpenM_Book_DAO {
                 )));
     }
 
-    public function deleteFromGroup($groupId) {
+    public function deleteFromCommunity($groupId) {
         self::$db->request(OpenM_DB::delete($this->getTABLE(self::OPENM_BOOK_COMMUNITY_VISIBILITY_TABLE_NAME), array(
                     self::COMMUNITY_ID => intval($groupId)
                 )));

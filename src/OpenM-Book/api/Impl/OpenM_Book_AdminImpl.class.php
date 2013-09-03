@@ -152,9 +152,6 @@ class OpenM_Book_AdminImpl extends OpenM_BookCommonsImpl implements OpenM_Book_A
 
     /**
      * OK
-     * 
-     * @param type $branchId
-     * @return HashtableString
      */
     public function getTree($branchId = null) {
         if (!$this->isUserRegisteredAndAdmin())
@@ -206,9 +203,6 @@ class OpenM_Book_AdminImpl extends OpenM_BookCommonsImpl implements OpenM_Book_A
 
     /**
      * OK
-     * 
-     * @param type $branchId
-     * @return HashtableString
      */
     public function removeBranch($branchId) {
         if (!$this->isUserRegisteredAndAdmin())
@@ -289,11 +283,6 @@ class OpenM_Book_AdminImpl extends OpenM_BookCommonsImpl implements OpenM_Book_A
 
     /**
      * @todo check secondary options
-     * 
-     * @param type $branchId
-     * @param type $propertyName
-     * @param type $propertyValue
-     * @return HashtableString
      */
     public function setBranchProperty($branchId, $propertyName, $propertyValue) {
         if (!$this->isUserRegisteredAndAdmin())
@@ -380,19 +369,14 @@ class OpenM_Book_AdminImpl extends OpenM_BookCommonsImpl implements OpenM_Book_A
             default:
                 break;
         }
-
-
+        
         OpenM_Log::debug("update property in DAO", __CLASS__, __METHOD__, __LINE__);
         $sectionDAO->update($branchId, $this->getConvertorArray($propertyName), $propertyValue);
-
-        OpenM_Log::debug("return ok", __CLASS__, __METHOD__, __LINE__);
         return $this->ok();
     }
 
     /**
      * OK
-     * 
-     * @return HashtableString
      */
     public function getAdmins() {
         if (!$this->isUserRegisteredAndAdmin())
@@ -415,9 +399,6 @@ class OpenM_Book_AdminImpl extends OpenM_BookCommonsImpl implements OpenM_Book_A
 
     /**
      * OK
-     * 
-     * @param type $userId
-     * @return HashtableString
      */
     public function removeAdmin($userId) {
         if (!$this->isUserRegisteredAndAdmin())
@@ -444,8 +425,6 @@ class OpenM_Book_AdminImpl extends OpenM_BookCommonsImpl implements OpenM_Book_A
 
     /**
      * OK
-     * 
-     * @return HashtableString
      */
     public function install() {
         if (!$this->isUserRegistered())
