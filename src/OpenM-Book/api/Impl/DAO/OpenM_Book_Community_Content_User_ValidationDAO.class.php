@@ -17,15 +17,15 @@ class OpenM_Book_Community_Content_User_ValidationDAO extends OpenM_Book_DAO {
     const TIME = "time";
     const MESSAGE = "message";
 
-    public function create($groupId, $userId, $validatedBy, $message) {
+    public function create($groupId, $userId, $validatedBy, $message = "") {
         $time = time();
-        self::$db->request(OpenM_DB::delete($this->getTABLE(self::OPENM_BOOK_COMMUNITY_CONTENT_USER_VALIDATION_TABLE_NAME), array(
+        self::$db->request(OpenM_DB::insert($this->getTABLE(self::OPENM_BOOK_COMMUNITY_CONTENT_USER_VALIDATION_TABLE_NAME), array(
                     self::GROUP_ID => intval($groupId),
                     self::USER_ID => intval($userId),
                     self::VALIDATED_BY => intval($validatedBy),
                     self::MESSAGE => self::$db->escape($message),
                     self::TIME => intval($time)
-                )));
+        )));
 
         $return = new HashtableString();
         return $return->put(self::USER_ID, $userId)
@@ -41,7 +41,7 @@ class OpenM_Book_Community_Content_User_ValidationDAO extends OpenM_Book_DAO {
                     self::USER_ID => intval($userId),
                     self::VALIDATED_BY => intval($actionBy),
                     self::VALIDATION => (($validation) ? 1 : 0),
-                )));
+        )));
     }
 
     public function deleteFromUserAndGroup($groupId, $userId, $validation = true) {
@@ -49,27 +49,28 @@ class OpenM_Book_Community_Content_User_ValidationDAO extends OpenM_Book_DAO {
                     self::GROUP_ID => intval($groupId),
                     self::USER_ID => intval($userId),
                     self::VALIDATION => (($validation) ? 1 : 0),
-                )));
+        )));
     }
 
     public function getFromUserAndGroup($groupId, $userId) {
         return self::$db->request_HashtableString(OpenM_DB::select($this->getTABLE(self::OPENM_BOOK_COMMUNITY_CONTENT_USER_VALIDATION_TABLE_NAME), array(
                             self::USER_ID => intval($userId),
                             self::GROUP_ID => intval($groupId)
-                        )));
+        )));
     }
 
     public function getFromGroup($groupId) {
         return self::$db->request_HashtableString(OpenM_DB::select($this->getTABLE(self::OPENM_BOOK_COMMUNITY_CONTENT_USER_VALIDATION_TABLE_NAME), array(
                             self::GROUP_ID => intval($groupId)
-                        )));
+        )));
     }
 
-    public function deleteFromGroup($groupId) {
+    public function deleteFromCommunity($groupId) {
         self::$db->request(OpenM_DB::delete($this->getTABLE(self::OPENM_BOOK_COMMUNITY_CONTENT_USER_VALIDATION_TABLE_NAME), array(
                     self::GROUP_ID => intval($groupId),
-                )));
+        )));
     }
+
 }
 
 ?>

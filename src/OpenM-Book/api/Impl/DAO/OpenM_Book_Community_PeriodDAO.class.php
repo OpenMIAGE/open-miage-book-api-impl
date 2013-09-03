@@ -49,7 +49,7 @@ class OpenM_Book_Community_PeriodDAO extends OpenM_Book_DAO {
                 )));
     }
 
-    public function deleteFromGroup($groupId) {
+    public function deleteFromCommunity($groupId) {
         self::$db->request(OpenM_DB::delete($this->getTABLE(self::OPENM_BOOK_COMMUNITY_PERIOD_TABLE_NAME), array(
                     self::GROUP_ID => intval($groupId)
                 )));
