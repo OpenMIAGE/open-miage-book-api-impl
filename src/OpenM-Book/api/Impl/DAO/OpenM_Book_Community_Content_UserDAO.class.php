@@ -139,8 +139,6 @@ class OpenM_Book_Community_Content_UserDAO extends OpenM_Book_DAO {
                 . " ($usersIds) c"
                 . " WHERE u." . OpenM_Book_UserDAO::ID . "=c." . self::USER_ID
                 . ($valid ? (" GROUP BY " . OpenM_Book_UserDAO::ID) : "");
-        if ($userId !== null)
-            $users .= " AND u." . OpenM_Book_UserDAO::ID . "<>$userId";
         $users .= " ORDER BY u." . OpenM_Book_UserDAO::FIRST_NAME . ", u." . OpenM_Book_UserDAO::LAST_NAME;
         return self::$db->request_ArrayList(self::$db->limit($users, $maxNbResult, $start));
     }
