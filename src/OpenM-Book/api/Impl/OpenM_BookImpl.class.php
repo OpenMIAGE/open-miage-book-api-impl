@@ -509,8 +509,13 @@ class OpenM_BookImpl extends OpenM_BookCommonsImpl implements OpenM_Book {
         if (!$this->isUserRegistered())
             return $this->error;
 
-        if ($this->user->get(OpenM_Book_UserDAO::ID)->toInt() == $userId)
-            return $this->error("You can't validate yourself");
+        $adminDAO = new OpenM_Book_AdminDAO();
+        $isUserAdmin = false;
+        if ($this->user->get(OpenM_Book_UserDAO::ID)->toInt() == $userId) {
+            $isUserAdmin = ($adminDAO->get($this->user->get(OpenM_Book_UserDAO::UID)) != null);
+            if (!$isUserAdmin)
+                return $this->error("You can't validate yourself");
+        }
 
         OpenM_Log::debug("check if user selected is not valid in this community", __CLASS__, __METHOD__, __LINE__);
         $groupContentUserDAO = new OpenM_Book_Group_Content_UserDAO();
@@ -519,8 +524,7 @@ class OpenM_BookImpl extends OpenM_BookCommonsImpl implements OpenM_Book {
 
         OpenM_Log::debug("check if i'm moderator of community or admin", __CLASS__, __METHOD__, __LINE__);
         $communityModeratorDAO = new OpenM_Book_Community_ModeratorDAO();
-        $adminDAO = new OpenM_Book_AdminDAO();
-        if ($communityModeratorDAO->isUserModerator($this->user->get(OpenM_Book_UserDAO::ID)->toInt(), $communityId) || $adminDAO->get($this->user->get(OpenM_Book_UserDAO::UID)) != null) {
+        if ($isUserAdmin || $communityModeratorDAO->isUserModerator($this->user->get(OpenM_Book_UserDAO::ID)->toInt(), $communityId)) {
             $communityContentUserDAO = new OpenM_Book_Community_Content_UserDAO();
             OpenM_Log::debug("i'm moderator or admin, so, i validate user selected in this community", __CLASS__, __METHOD__, __LINE__);
             $communityContentUserDAO->update($communityId, $userId, true);
