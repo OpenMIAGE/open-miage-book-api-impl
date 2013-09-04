@@ -357,7 +357,8 @@ class OpenM_Book_AdminImpl extends OpenM_BookCommonsImpl implements OpenM_Book_A
                     return $this->error("Branch is on CONTAINS_ONLY_ONE_COMMUNITY mode, you can't permit to user to add community");
                 break;
             case self::VALIDATION_REQUIRED_PARAMETER:
-                return $this->error("not manage for now");
+                if ($propertyValue === 1 && $section->get(OpenM_Book_SectionDAO::USER_CAN_REGISTER)->toInt() === OpenM_Book_SectionDAO::DESACTIVATED)
+                    return $this->error("You must activate user registration mode before");
                 break;
             case self::USER_CAN_ADD_COMMUNITY_PARAMETER:
                 if ($propertyValue === 1 && $section->get(OpenM_Book_SectionDAO::ONLY_ONE_COMMUNITY)->toInt() === OpenM_Book_SectionDAO::ACTIVATED)
