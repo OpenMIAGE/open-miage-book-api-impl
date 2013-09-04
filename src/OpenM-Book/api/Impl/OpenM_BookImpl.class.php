@@ -165,15 +165,27 @@ class OpenM_BookImpl extends OpenM_BookCommonsImpl implements OpenM_Book {
         if ($section == null)
             return $this->error("It's not a community");
 
+        $return = $this->ok();
+
+        if ($section->get(OpenM_Book_SectionDAO::ONLY_ONE_COMMUNITY)->toInt() === OpenM_Book_SectionDAO::ACTIVATED)
+            $return->put(self::RETURN_COMMUNITY_CANT_BE_REMOVED_PARAMETER, self::TRUE_PARAMETER_VALUE);
+
         OpenM_Log::debug("it's a community", __CLASS__, __METHOD__, __LINE__);
-        $return = $this->ok()
-                ->put(self::RETURN_COMMUNITY_ID_PARAMETER, $group->get(OpenM_Book_GroupDAO::ID)->toInt())
+        $return->put(self::RETURN_COMMUNITY_ID_PARAMETER, $group->get(OpenM_Book_GroupDAO::ID)->toInt())
                 ->put(self::RETURN_COMMUNITY_NAME_PARAMETER, $group->get(OpenM_Book_GroupDAO::NAME));
 
         $communityBannedDAO = new OpenM_Book_Community_Banned_UsersDAO();
         OpenM_Log::debug("check if user is banned of community parent", __CLASS__, __METHOD__, __LINE__);
-        if ($communityBannedDAO->isUserBanned($this->user->get(OpenM_Book_UserDAO::ID)->toInt(), $communityId))
-            return $return->put(self::RETURN_YOU_ARE_BANNED_PARAMETER, self::TRUE_PARAMETER_VALUE);
+        if ($communityBannedDAO->isUserBanned($this->user->get(OpenM_Book_UserDAO::ID)->toInt(), $communityId)) {
+            $moderatorDAO = new OpenM_Book_Community_ModeratorDAO();
+            OpenM_Log::debug("check if user is moderator of community parent", __CLASS__, __METHOD__, __LINE__);
+            if (!$moderatorDAO->isUserModerator($this->user->get(OpenM_Book_UserDAO::ID)->toInt(), $communityId)) {
+                $adminDAO = new OpenM_Book_AdminDAO();
+                OpenM_Log::debug("check if user is admin", __CLASS__, __METHOD__, __LINE__);
+                if ($adminDAO->get($this->user->get(OpenM_Book_UserDAO::UID)) == null)
+                    return $return->put(self::RETURN_YOU_ARE_BANNED_PARAMETER, self::TRUE_PARAMETER_VALUE);
+            }
+        }
 
         $groupContentGroupDAO = new OpenM_Book_Group_Content_GroupDAO();
         OpenM_Log::debug("load community childs", __CLASS__, __METHOD__, __LINE__);
@@ -355,10 +367,20 @@ class OpenM_BookImpl extends OpenM_BookCommonsImpl implements OpenM_Book {
         if (!$this->isUserRegistered())
             return $this->error;
 
+        $return = $this->ok();
+
         $communityBannedDAO = new OpenM_Book_Community_Banned_UsersDAO();
         OpenM_Log::debug("check if user is banned of community", __CLASS__, __METHOD__, __LINE__);
-        if ($communityBannedDAO->isUserBanned($this->user->get(OpenM_Book_UserDAO::ID)->toInt(), $communityId))
-            return $this->ok()->put(self::RETURN_YOU_ARE_BANNED_PARAMETER, self::TRUE_PARAMETER_VALUE);
+        if ($communityBannedDAO->isUserBanned($this->user->get(OpenM_Book_UserDAO::ID)->toInt(), $communityId)) {
+            $moderatorDAO = new OpenM_Book_Community_ModeratorDAO();
+            OpenM_Log::debug("check if user is moderator of community parent", __CLASS__, __METHOD__, __LINE__);
+            if (!$moderatorDAO->isUserModerator($this->user->get(OpenM_Book_UserDAO::ID)->toInt(), $communityId)) {
+                $adminDAO = new OpenM_Book_AdminDAO();
+                OpenM_Log::debug("check if user is admin", __CLASS__, __METHOD__, __LINE__);
+                if ($adminDAO->get($this->user->get(OpenM_Book_UserDAO::UID)) == null)
+                    return $return->put(self::RETURN_YOU_ARE_BANNED_PARAMETER, self::TRUE_PARAMETER_VALUE);
+            }
+        }
 
         OpenM_Log::debug("search users valid in DAO", __CLASS__, __METHOD__, __LINE__);
         $communityContentUserDAO = new OpenM_Book_Community_Content_UserDAO();
@@ -376,7 +398,7 @@ class OpenM_BookImpl extends OpenM_BookCommonsImpl implements OpenM_Book {
         }
         OpenM_Log::debug("count all users valid in DAO", __CLASS__, __METHOD__, __LINE__);
         $count = $communityContentUserDAO->countOfUsers($communityId);
-        return $this->ok()->put(self::RETURN_USER_LIST_COUNT_PARAMETER, $count)
+        return $return->put(self::RETURN_USER_LIST_COUNT_PARAMETER, $count)
                         ->put(self::RETURN_USER_LIST_PARAMETER, $userList);
     }
 
@@ -405,10 +427,20 @@ class OpenM_BookImpl extends OpenM_BookCommonsImpl implements OpenM_Book {
         if (!$this->isUserRegistered())
             return $this->error;
 
+        $return = $this->ok();
+
         $communityBannedDAO = new OpenM_Book_Community_Banned_UsersDAO();
         OpenM_Log::debug("check if user is banned of community", __CLASS__, __METHOD__, __LINE__);
-        if ($communityBannedDAO->isUserBanned($this->user->get(OpenM_Book_UserDAO::ID)->toInt(), $communityId))
-            return $this->ok()->put(self::RETURN_YOU_ARE_BANNED_PARAMETER, self::TRUE_PARAMETER_VALUE);
+        if ($communityBannedDAO->isUserBanned($this->user->get(OpenM_Book_UserDAO::ID)->toInt(), $communityId)) {
+            $moderatorDAO = new OpenM_Book_Community_ModeratorDAO();
+            OpenM_Log::debug("check if user is moderator of community parent", __CLASS__, __METHOD__, __LINE__);
+            if (!$moderatorDAO->isUserModerator($this->user->get(OpenM_Book_UserDAO::ID)->toInt(), $communityId)) {
+                $adminDAO = new OpenM_Book_AdminDAO();
+                OpenM_Log::debug("check if user is admin", __CLASS__, __METHOD__, __LINE__);
+                if ($adminDAO->get($this->user->get(OpenM_Book_UserDAO::UID)) == null)
+                    return $return->put(self::RETURN_YOU_ARE_BANNED_PARAMETER, self::TRUE_PARAMETER_VALUE);
+            }
+        }
 
         OpenM_Log::debug("search users valid in DAO", __CLASS__, __METHOD__, __LINE__);
         $communityContentUserDAO = new OpenM_Book_Community_Content_UserDAO();
@@ -429,7 +461,7 @@ class OpenM_BookImpl extends OpenM_BookCommonsImpl implements OpenM_Book {
         }
         OpenM_Log::debug("count all users valid in DAO", __CLASS__, __METHOD__, __LINE__);
         $count = $communityContentUserDAO->countOfUsers($communityId, false);
-        return $this->ok()->put(self::RETURN_USER_LIST_COUNT_PARAMETER, $count)
+        return $return->put(self::RETURN_USER_LIST_COUNT_PARAMETER, $count)
                         ->put(self::RETURN_USER_LIST_PARAMETER, $userList);
     }
 
