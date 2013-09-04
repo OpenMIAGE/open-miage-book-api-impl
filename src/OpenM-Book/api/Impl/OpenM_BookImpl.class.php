@@ -167,6 +167,7 @@ class OpenM_BookImpl extends OpenM_BookCommonsImpl implements OpenM_Book {
 
         $return = $this->ok();
 
+        OpenM_Log::debug("check if only one community can be present", __CLASS__, __METHOD__, __LINE__);
         if ($section->get(OpenM_Book_SectionDAO::ONLY_ONE_COMMUNITY)->toInt() === OpenM_Book_SectionDAO::ACTIVATED)
             $return->put(self::RETURN_COMMUNITY_CANT_BE_REMOVED_PARAMETER, self::TRUE_PARAMETER_VALUE);
 
@@ -219,10 +220,19 @@ class OpenM_BookImpl extends OpenM_BookCommonsImpl implements OpenM_Book {
         if ($sectionChilds->size() == 1) {
             OpenM_Log::debug("Only one branch child found in DAO", __CLASS__, __METHOD__, __LINE__);
             $sectionChild = $sectionChilds->get($sectionChilds->keys()->next());
-            if ($sectionChild->get(OpenM_Book_SectionDAO::USER_CAN_ADD_COMMUNITY)->toInt() == OpenM_Book_SectionDAO::ACTIVATED)
-                $return->put(self::RETURN_USER_CAN_ADD_COMMUNITY_PARAMETER, self::TRUE_PARAMETER_VALUE);
             if ($sectionChild->get(OpenM_Book_SectionDAO::ONLY_ONE_COMMUNITY)->toInt() == OpenM_Book_SectionDAO::ACTIVATED)
                 $return->put(self::RETURN_FORBIDDEN_TO_ADD_COMMUNITY_PARAMETER, self::TRUE_PARAMETER_VALUE);
+            else {
+                OpenM_Log::debug("check if user can add community", __CLASS__, __METHOD__, __LINE__);
+                if ($sectionChild->get(OpenM_Book_SectionDAO::USER_CAN_ADD_COMMUNITY)->toInt() == OpenM_Book_SectionDAO::ACTIVATED)
+                    $return->put(self::RETURN_USER_CAN_ADD_COMMUNITY_PARAMETER, self::TRUE_PARAMETER_VALUE);
+                OpenM_Log::debug("check if moderator can add community", __CLASS__, __METHOD__, __LINE__);
+                if ($sectionChild->get(OpenM_Book_SectionDAO::MODERATOR_CAN_ADD_COMMUNITY)->toInt() === OpenM_Book_SectionDAO::ACTIVATED)
+                    $return->put(self::RETURN_MODERATOR_CAN_ADD_COMMUNITY_PARAMETER, self::TRUE_PARAMETER_VALUE);
+                OpenM_Log::debug("check if admin can add community", __CLASS__, __METHOD__, __LINE__);
+                if ($sectionChild->get(OpenM_Book_SectionDAO::ADMIN_CAN_ADD_COMMUNITY)->toInt() === OpenM_Book_SectionDAO::ACTIVATED)
+                    $return->put(self::RETURN_ADMIN_CAN_ADD_COMMUNITY_PARAMETER, self::TRUE_PARAMETER_VALUE);
+            }
         }
         else {
             $return->put(self::RETURN_FORBIDDEN_TO_ADD_COMMUNITY_PARAMETER, self::TRUE_PARAMETER_VALUE);

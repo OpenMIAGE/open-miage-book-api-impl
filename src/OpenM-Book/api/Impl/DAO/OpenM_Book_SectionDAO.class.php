@@ -24,10 +24,12 @@ class OpenM_Book_SectionDAO extends OpenM_Book_DAO {
     const VALIDATION_REQUIRED = "validation_required";
     const MANAGE_PERIOD = "manage_period";
     const USER_CAN_ADD_COMMUNITY = "user_can_add_community";
+    const MODERATOR_CAN_ADD_COMMUNITY = "moderator_can_add_community";
+    const ADMIN_CAN_ADD_COMMUNITY = "admin_can_add_community";
     const ACTIVATED = 1;
     const DESACTIVATED = 0;
 
-    public function create($name, $regExp, $section_parent_id = null, $onlyOneCommunity = self::ACTIVATED, $userCanRegister = self::DESACTIVATED, $needValidation = self::DESACTIVATED, $managePeriod = self::DESACTIVATED, $userCanAddCommunity = self::DESACTIVATED) {
+    public function create($name, $regExp, $section_parent_id = null, $onlyOneCommunity = true, $userCanRegister = false, $needValidation = false, $managePeriod = false, $userCanAddCommunity = false, $moderatorCanAddCommunity = true, $adminCanAddCommunity = true) {
         $arrayARgument = array(
             self::NAME => self::$db->escape($name),
             self::ONLY_ONE_COMMUNITY => ($onlyOneCommunity) ? 1 : 0,
@@ -35,6 +37,8 @@ class OpenM_Book_SectionDAO extends OpenM_Book_DAO {
             self::VALIDATION_REQUIRED => ($needValidation) ? 1 : 0,
             self::MANAGE_PERIOD => ($managePeriod) ? 1 : 0,
             self::USER_CAN_ADD_COMMUNITY => ($userCanAddCommunity) ? 1 : 0,
+            self::MODERATOR_CAN_ADD_COMMUNITY => ($moderatorCanAddCommunity) ? 1 : 0,
+            self::ADMIN_CAN_ADD_COMMUNITY => ($adminCanAddCommunity) ? 1 : 0,
             self::REG_EXP => $regExp
         );
         if (!is_null($section_parent_id))
@@ -47,7 +51,7 @@ class OpenM_Book_SectionDAO extends OpenM_Book_DAO {
     public function get($sectionId) {
         return self::$db->request_fetch_HashtableString(OpenM_DB::select($this->getTABLE(self::OpenM_BOOK_SECTION_Table_Name), array(
                             self::ID => intval($sectionId)
-                        )));
+        )));
     }
 
     public function getFromCommunity($communityId) {
@@ -93,7 +97,7 @@ class OpenM_Book_SectionDAO extends OpenM_Book_DAO {
     public function remove($sectionId) {
         self::$db->request(OpenM_DB::delete($this->getTABLE(self::OpenM_BOOK_SECTION_Table_Name), array(
                     self::ID => intval($sectionId)
-                )));
+        )));
     }
 
     public function update($sectionId, $property, $value) {
@@ -101,7 +105,7 @@ class OpenM_Book_SectionDAO extends OpenM_Book_DAO {
                     $property => $value
                         ), array(
                     self::ID => intval($sectionId)
-                )));
+        )));
     }
 
 }
