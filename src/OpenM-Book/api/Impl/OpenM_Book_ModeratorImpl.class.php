@@ -69,6 +69,12 @@ class OpenM_Book_ModeratorImpl extends OpenM_BookCommonsImpl implements OpenM_Bo
         if ($groupContentGroupDAO->hasDescendant($communityId))
             return $this->error("community must not contain community descendant");
 
+        OpenM_Log::debug("check if community has parent", __CLASS__, __METHOD__, __LINE__);
+        $communityDAO = new OpenM_Book_Community_To_SectionDAO();
+        $section = $communityDAO->getCommunityAncestors($communityId);
+        if ($section->size() == 0)
+            return $this->error("community must have parent");
+
         OpenM_Log::debug("recover moderator group of community", __CLASS__, __METHOD__, __LINE__);
         $communityModeratorDAO = new OpenM_Book_Community_ModeratorDAO();
         $moderator = $communityModeratorDAO->getFromCommunity($communityId);
@@ -104,7 +110,7 @@ class OpenM_Book_ModeratorImpl extends OpenM_BookCommonsImpl implements OpenM_Bo
         $sectionDAO = new OpenM_Book_SectionDAO();
         $section = $sectionDAO->getFromCommunity($communityId);
         OpenM_Log::debug("Constraints : '$newName' / '^" . $section->get(OpenM_Book_SectionDAO::REG_EXP) . "$'", __CLASS__, __METHOD__, __LINE__);
-        if (!$this->isAdmin && !RegExp::ereg("^".$section->get(OpenM_Book_SectionDAO::REG_EXP)."$", $newName))
+        if (!$this->isAdmin && !RegExp::ereg("^" . $section->get(OpenM_Book_SectionDAO::REG_EXP) . "$", $newName))
             return $this->error("you must respect names' constraints : " . $section->get(OpenM_Book_SectionDAO::REG_EXP));
 
         $groupDAO = new OpenM_Book_GroupDAO();

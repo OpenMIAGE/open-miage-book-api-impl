@@ -54,14 +54,16 @@ class OpenM_Book_AdminImpl extends OpenM_BookCommonsImpl implements OpenM_Book_A
         if (is_array($this->apiToDAOPropertyNameConvertion))
             return $this->apiToDAOPropertyNameConvertion[$key];
         $this->apiToDAOPropertyNameConvertion = array(
-            self::RETURN_COMMUNITY_NAME_REGEXP_PARAMETER => OpenM_Book_SectionDAO::REG_EXP,
-            self::RETURN_USER_CAN_REGISTER_PARAMETER => OpenM_Book_SectionDAO::USER_CAN_REGISTER,
-            self::RETURN_CONTAINS_ONLY_ONE_COMMUNITY_PARAMETER => OpenM_Book_SectionDAO::ONLY_ONE_COMMUNITY,
-            self::RETURN_VALIDATION_REQUIRED_PARAMETER => OpenM_Book_SectionDAO::VALIDATION_REQUIRED,
-            self::RETURN_MANAGE_PERIOD_PARAMETER => OpenM_Book_SectionDAO::MANAGE_PERIOD,
-            self::RETURN_BRANCH_NAME_PARAMETER => OpenM_Book_SectionDAO::NAME,
+            self::USER_CAN_REGISTER_PARAMETER => OpenM_Book_SectionDAO::USER_CAN_REGISTER,
+            self::COMMUNITY_NAME_REGEXP_PARAMETER => OpenM_Book_SectionDAO::REG_EXP,
+            self::USER_CAN_ADD_COMMUNITY_PARAMETER => OpenM_Book_SectionDAO::USER_CAN_ADD_COMMUNITY,
+            self::CONTAINS_ONLY_ONE_COMMUNITY_PARAMETER => OpenM_Book_SectionDAO::ONLY_ONE_COMMUNITY,
+            self::VALIDATION_REQUIRED_PARAMETER => OpenM_Book_SectionDAO::VALIDATION_REQUIRED,
+            self::MANAGE_PERIOD_PARAMETER => OpenM_Book_SectionDAO::MANAGE_PERIOD,
+            self::BRANCH_NAME_PARAMETER => OpenM_Book_SectionDAO::NAME,
             OpenM_Book_SectionDAO::REG_EXP => self::RETURN_COMMUNITY_NAME_REGEXP_PARAMETER,
             OpenM_Book_SectionDAO::USER_CAN_REGISTER => self::RETURN_USER_CAN_REGISTER_PARAMETER,
+            OpenM_Book_SectionDAO::USER_CAN_ADD_COMMUNITY => self::RETURN_USER_CAN_ADD_COMMUNITY_PARAMETER,
             OpenM_Book_SectionDAO::ONLY_ONE_COMMUNITY => self::RETURN_CONTAINS_ONLY_ONE_COMMUNITY_PARAMETER,
             OpenM_Book_SectionDAO::VALIDATION_REQUIRED => self::RETURN_VALIDATION_REQUIRED_PARAMETER,
             OpenM_Book_SectionDAO::MANAGE_PERIOD => self::RETURN_MANAGE_PERIOD_PARAMETER,
@@ -109,16 +111,16 @@ class OpenM_Book_AdminImpl extends OpenM_BookCommonsImpl implements OpenM_Book_A
                 return $this->error("parent branch must contain only one community");
             OpenM_Log::debug("recover communityId parent", __CLASS__, __METHOD__, __LINE__);
             $communityParentId = $communitiesParent->get($communitiesParent->keys()->next())->get(OpenM_Book_Community_To_SectionDAO::COMMUNITY_ID)->toInt();
-            
+
             $community = self::_addCommunity($communityParentId, $name, $section);
-            
+
             $return->put(self::RETURN_COMMUNITY_ID_PARAMETER, $community->get(OpenM_Book_GroupDAO::ID));
         }
 
         return $return;
     }
-    
-    public static function _addCommunity($communityParentId, $name, $section){
+
+    public static function _addCommunity($communityParentId, $name, $section) {
         OpenM_Log::debug("User can add community", __CLASS__, __METHOD__, __LINE__);
         $groupDAO = new OpenM_Book_GroupDAO();
         OpenM_Log::debug("Create group community in DAO", __CLASS__, __METHOD__, __LINE__);
@@ -143,7 +145,7 @@ class OpenM_Book_AdminImpl extends OpenM_BookCommonsImpl implements OpenM_Book_A
         OpenM_Log::debug("add community moderator group in community moderator group parent in DAO", __CLASS__, __METHOD__, __LINE__);
         $groupContentGroupDAO->create($moderator->get(OpenM_Book_GroupDAO::ID), $moderatorParent->get(OpenM_Book_Community_ModeratorDAO::MODERATOR_ID)->toInt());
         OpenM_Log::debug("add community banned group in community banned group parent in DAO", __CLASS__, __METHOD__, __LINE__);
-        $groupContentGroupDAO->create($bannedGroup->get(OpenM_Book_GroupDAO::ID), $bannedGroupParent->get(OpenM_Book_Community_Banned_UsersDAO::BANNED_GROUP_ID)->toInt());        
+        $groupContentGroupDAO->create($bannedGroup->get(OpenM_Book_GroupDAO::ID), $bannedGroupParent->get(OpenM_Book_Community_Banned_UsersDAO::BANNED_GROUP_ID)->toInt());
         OpenM_Log::debug("add community section association in DAO", __CLASS__, __METHOD__, __LINE__);
         $communitiyToSectionDAO = new OpenM_Book_Community_To_SectionDAO();
         $communitiyToSectionDAO->create($community->get(OpenM_Book_GroupDAO::ID), $section->get(OpenM_Book_SectionDAO::ID)->toInt());
@@ -170,7 +172,7 @@ class OpenM_Book_AdminImpl extends OpenM_BookCommonsImpl implements OpenM_Book_A
 
         $return_section = new HashtableString();
         OpenM_Log::debug("add selected section in return", __CLASS__, __METHOD__, __LINE__);
-        $return_section->put(self::RETURN_BRANCH_ID_PARAMETER, $section->get(OpenM_Book_SectionDAO::ID))
+        $return_section->put(self::RETURN_BRANCH_ID_PARAMETER, $section->get(OpenM_Book_SectionDAO::ID)->toInt())
                 ->put(self::RETURN_BRANCH_NAME_PARAMETER, $section->get(OpenM_Book_SectionDAO::NAME));
 
         OpenM_Log::debug("Search section childs' in DAO", __CLASS__, __METHOD__, __LINE__);
@@ -182,7 +184,7 @@ class OpenM_Book_AdminImpl extends OpenM_BookCommonsImpl implements OpenM_Book_A
             $childTemp = new HashtableString();
             $return_childs
                     ->put($child->get(OpenM_Book_SectionDAO::ID), $childTemp
-                            ->put(self::RETURN_BRANCH_ID_PARAMETER, $child->get(OpenM_Book_SectionDAO::ID))
+                            ->put(self::RETURN_BRANCH_ID_PARAMETER, $child->get(OpenM_Book_SectionDAO::ID)->toInt())
                             ->put(self::RETURN_BRANCH_NAME_PARAMETER, $child->get(OpenM_Book_SectionDAO::NAME)));
         }
 
@@ -190,9 +192,9 @@ class OpenM_Book_AdminImpl extends OpenM_BookCommonsImpl implements OpenM_Book_A
         OpenM_Log::debug("check if section has parent", __CLASS__, __METHOD__, __LINE__);
         if ($section->get(OpenM_Book_SectionDAO::SECTION_PARENT_ID) != null) {
             OpenM_Log::debug("Search parent section in DAO", __CLASS__, __METHOD__, __LINE__);
-            $sectionParent = $sectionDAO->get($section->get(OpenM_Book_SectionDAO::SECTION_PARENT_ID));
+            $sectionParent = $sectionDAO->get($section->get(OpenM_Book_SectionDAO::SECTION_PARENT_ID)->toInt());
             OpenM_Log::debug("parent section found in DAO", __CLASS__, __METHOD__, __LINE__);
-            $return_parent_section->put(self::RETURN_BRANCH_ID_PARAMETER, $sectionParent->get(OpenM_Book_SectionDAO::ID))
+            $return_parent_section->put(self::RETURN_BRANCH_ID_PARAMETER, $sectionParent->get(OpenM_Book_SectionDAO::ID)->toInt())
                     ->put(self::RETURN_BRANCH_NAME_PARAMETER, $sectionParent->get(OpenM_Book_SectionDAO::NAME));
         }
 
@@ -271,13 +273,13 @@ class OpenM_Book_AdminImpl extends OpenM_BookCommonsImpl implements OpenM_Book_A
             return $this->error("branch not found");
 
         return $this->ok()
-                        ->put(self::RETURN_BRANCH_ID_PARAMETER, $section->get(OpenM_Book_SectionDAO::ID))
+                        ->put(self::RETURN_BRANCH_ID_PARAMETER, $section->get(OpenM_Book_SectionDAO::ID)->toInt())
                         ->put(self::RETURN_BRANCH_NAME_PARAMETER, $section->get(OpenM_Book_SectionDAO::NAME))
-                        ->put(self::RETURN_CONTAINS_ONLY_ONE_COMMUNITY_PARAMETER, $section->get(OpenM_Book_SectionDAO::ONLY_ONE_COMMUNITY))
-                        ->put(self::RETURN_VALIDATION_REQUIRED_PARAMETER, $section->get(OpenM_Book_SectionDAO::VALIDATION_REQUIRED))
-                        ->put(self::RETURN_MANAGE_PERIOD_PARAMETER, $section->get(OpenM_Book_SectionDAO::MANAGE_PERIOD))
-                        ->put(self::RETURN_USER_CAN_REGISTER_PARAMETER, $section->get(OpenM_Book_SectionDAO::USER_CAN_REGISTER))
-                        ->put(self::RETURN_USER_CAN_ADD_COMMUNITY_PARAMETER, $section->get(OpenM_Book_SectionDAO::USER_CAN_ADD_COMMUNITY))
+                        ->put(self::RETURN_CONTAINS_ONLY_ONE_COMMUNITY_PARAMETER, $section->get(OpenM_Book_SectionDAO::ONLY_ONE_COMMUNITY)->toInt())
+                        ->put(self::RETURN_VALIDATION_REQUIRED_PARAMETER, $section->get(OpenM_Book_SectionDAO::VALIDATION_REQUIRED)->toInt())
+                        ->put(self::RETURN_MANAGE_PERIOD_PARAMETER, $section->get(OpenM_Book_SectionDAO::MANAGE_PERIOD)->toInt())
+                        ->put(self::RETURN_USER_CAN_REGISTER_PARAMETER, $section->get(OpenM_Book_SectionDAO::USER_CAN_REGISTER)->toInt())
+                        ->put(self::RETURN_USER_CAN_ADD_COMMUNITY_PARAMETER, $section->get(OpenM_Book_SectionDAO::USER_CAN_ADD_COMMUNITY)->toInt())
                         ->put(self::RETURN_COMMUNITY_NAME_REGEXP_PARAMETER, $section->get(OpenM_Book_SectionDAO::REG_EXP));
     }
 
@@ -306,19 +308,12 @@ class OpenM_Book_AdminImpl extends OpenM_BookCommonsImpl implements OpenM_Book_A
         if (!$section->containsKey($this->getConvertorArray($propertyName)))
             return $this->error("propertyName (='$propertyName') not defined");
 
-        if ($propertyName == self::BRANCH_NAME_PARAMETER
-                || $propertyName == self::COMMUNITY_NAME_REGEXP_PARAMETER) {
-            if (!RegExp::preg("/^([a-zA-Z0-9]|[ \t])+$/", $propertyValue)
-                    && (preg_match("/$propertyValue/", "test") === false))
+        if ($propertyName == self::BRANCH_NAME_PARAMETER || $propertyName == self::COMMUNITY_NAME_REGEXP_PARAMETER) {
+            if (!RegExp::preg("/^([a-zA-Z0-9]|[ \t])+$/", $propertyValue) && (preg_match("/$propertyValue/", "test") === false))
                 return $this->error("propertyName ('$propertyName') not in a valid format");
         }
-        else if ($propertyName == self::CONTAINS_ONLY_ONE_COMMUNITY_PARAMETER
-                || $propertyName == self::MANAGE_PERIOD_PARAMETER
-                || $propertyName == self::USER_CAN_REGISTER_PARAMETER
-                || $propertyName == self::VALIDATION_REQUIRED_PARAMETER
-                || $propertyName == self::USER_CAN_ADD_COMMUNITY_PARAMETER) {
-            if ((String::isString($propertyValue) && !RegExp::preg("/^(0|1)$/", $propertyValue))
-                    || (is_numeric($propertyValue) && $propertyValue != 1 && $propertyValue != 0))
+        else if ($propertyName == self::CONTAINS_ONLY_ONE_COMMUNITY_PARAMETER || $propertyName == self::MANAGE_PERIOD_PARAMETER || $propertyName == self::USER_CAN_REGISTER_PARAMETER || $propertyName == self::VALIDATION_REQUIRED_PARAMETER || $propertyName == self::USER_CAN_ADD_COMMUNITY_PARAMETER) {
+            if ((String::isString($propertyValue) && !RegExp::preg("/^(0|1)$/", $propertyValue)) || (is_numeric($propertyValue) && $propertyValue != 1 && $propertyValue != 0))
                 return $this->error("propertyName (='$propertyName') not in a valid format: '0' OR '1'");
             else if (String::isString($propertyValue)) {
                 OpenM_Log::debug("convert string to int", __CLASS__, __METHOD__, __LINE__);
@@ -358,18 +353,21 @@ class OpenM_Book_AdminImpl extends OpenM_BookCommonsImpl implements OpenM_Book_A
                 return $this->error("not manage for now");
                 break;
             case self::USER_CAN_REGISTER_PARAMETER:
-                return $this->error("not manage for now");
+                if ($propertyValue === 1 && $section->get(OpenM_Book_SectionDAO::ONLY_ONE_COMMUNITY)->toInt() === OpenM_Book_SectionDAO::ACTIVATED)
+                    return $this->error("Branch is on CONTAINS_ONLY_ONE_COMMUNITY mode, you can't permit to user to add community");
                 break;
             case self::VALIDATION_REQUIRED_PARAMETER:
-                return $this->error("not manage for now");
+                if ($propertyValue === 1 && $section->get(OpenM_Book_SectionDAO::USER_CAN_REGISTER)->toInt() === OpenM_Book_SectionDAO::DESACTIVATED)
+                    return $this->error("You must activate user registration mode before");
                 break;
             case self::USER_CAN_ADD_COMMUNITY_PARAMETER:
-                return $this->error("not manage for now");
+                if ($propertyValue === 1 && $section->get(OpenM_Book_SectionDAO::ONLY_ONE_COMMUNITY)->toInt() === OpenM_Book_SectionDAO::ACTIVATED)
+                    return $this->error("Branch is on CONTAINS_ONLY_ONE_COMMUNITY mode, you can't permit to user to add community");
                 break;
             default:
                 break;
         }
-        
+
         OpenM_Log::debug("update property in DAO", __CLASS__, __METHOD__, __LINE__);
         $sectionDAO->update($branchId, $this->getConvertorArray($propertyName), $propertyValue);
         return $this->ok();
