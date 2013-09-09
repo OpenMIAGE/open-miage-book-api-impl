@@ -157,7 +157,7 @@ class OpenM_Book_UserImpl extends OpenM_BookCommonsImpl implements OpenM_Book_Us
 
         OpenM_Log::debug("property owned by user", __CLASS__, __METHOD__, __LINE__);
         $propertyValueDAO->delete($propertyValueId);
-        OpenM_Log::debug("property deleted", __CLASS__, __METHOD__, __LINE__);        
+        OpenM_Log::debug("property deleted", __CLASS__, __METHOD__, __LINE__);
         $userDAO = new OpenM_Book_UserDAO();
         $userDAO->updateTime($userId);
         return $this->ok();
@@ -173,6 +173,7 @@ class OpenM_Book_UserImpl extends OpenM_BookCommonsImpl implements OpenM_Book_Us
 
     /**
      * OK
+     * TODO Visibility
      */
     public function getUserProperties($userId = null, $basicOnly = null) {
         if (!String::isStringOrNull($userId))
@@ -221,6 +222,24 @@ class OpenM_Book_UserImpl extends OpenM_BookCommonsImpl implements OpenM_Book_Us
             }
         }
 
+
+        if ($isUserCalling)
+            $return->put(self::RETURN_USER_BIRTHDAY_PARAMETER, $user->get(OpenM_Book_UserDAO::BIRTHDAY)->toInt());
+        else if ($user->get(OpenM_Book_UserDAO::BIRTHDAY_DISPLAYED)->toInt() == OpenM_Book_UserDAO::ACTIVE) {
+            if ($user->get(OpenM_Book_UserDAO::BIRTHDAY_YEAR_DISPLAYED)->toInt() == OpenM_Book_UserDAO::ACTIVE)
+                $return->put(self::RETURN_USER_BIRTHDAY_PARAMETER, $user->get(OpenM_Book_UserDAO::BIRTHDAY)->toInt());
+            else {
+                $date = new Date($user->get(OpenM_Book_UserDAO::BIRTHDAY)->toInt());
+                $return->put(self::RETURN_USER_BIRTHDAY_PARAMETER, $date->toString("d/m"));
+            }
+        }
+        if ($isUserCalling || $user->get(OpenM_Book_UserDAO::BIRTHDAY_DISPLAYED)->toInt() == OpenM_Book_UserDAO::ACTIVE) {
+            if ($user->get(OpenM_Book_UserDAO::BIRTHDAY_YEAR_DISPLAYED)->toInt() == OpenM_Book_UserDAO::ACTIVE)
+                $return->put(self::RETURN_USER_BIRTHDAY_DISPLAY_YEAR_PARAMETER, self::TRUE_PARAMETER_VALUE);
+            else
+                $return->put(self::RETURN_USER_BIRTHDAY_DISPLAY_YEAR_PARAMETER, self::FALSE_PARAMETER_VALUE);
+        }
+
         $propertyList = new HashtableString();
         if ($basicOnly === self::FALSE_PARAMETER_VALUE) {
             OpenM_Log::debug("Check user property in DAO", __CLASS__, __METHOD__, __LINE__);
@@ -257,6 +276,7 @@ class OpenM_Book_UserImpl extends OpenM_BookCommonsImpl implements OpenM_Book_Us
             else
                 OpenM_Log::debug("Property not found in DAO", __CLASS__, __METHOD__, __LINE__);
         }
+
         return $return
                         ->put(self::RETURN_USER_ID_PARAMETER, $user->get(OpenM_Book_UserDAO::ID))
                         ->put(self::RETURN_USER_FIRST_NAME_PARAMETER, $user->get(OpenM_Book_UserDAO::FIRST_NAME))
@@ -311,5 +331,4 @@ class OpenM_Book_UserImpl extends OpenM_BookCommonsImpl implements OpenM_Book_Us
     }
 
 }
-
 ?>

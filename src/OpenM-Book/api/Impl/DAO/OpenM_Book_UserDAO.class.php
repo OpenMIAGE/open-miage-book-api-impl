@@ -20,6 +20,8 @@ class OpenM_Book_UserDAO extends OpenM_Book_DAO {
     const LAST_NAME = "last_name";
     const PHOTO = "photo";
     const BIRTHDAY = "birthday";
+    const BIRTHDAY_DISPLAYED = "birthday_displayed";
+    const BIRTHDAY_YEAR_DISPLAYED = "birthday_year_displayed";
     const ACTIVATED = "activated";
     const DEFAULT_MAIL = "mail_contact_selected";
     const ACTIVE = 1;
