@@ -18,46 +18,6 @@ class OpenM_Book_User_Property_ValueDAO extends OpenM_Book_DAO {
     const USER_ID = "user_id";
     const VALUE = "value";
 
-    /**
-     * 
-     * @param int $propertyId
-     * @param int $userId
-     * @param string $value
-     */
-    /*   public function create($propertyId, $userId, $value) {
-      $valueId = $this->sequence->next();
-      self::$db->insert($this->getTABLE(self::OPENM_BOOK_USER_PROPERTY_VALUE_TABLE_NAME), array(
-      self::ID => intval($valueId),
-      self::PROPERTY_ID => intval($propertyId),
-      self::USER_ID => intval($userId),
-      self::VALUE => $value
-      ));
-      $return = new HashtableString();
-      return $return->put(self::ID, $valueId)
-      ->put(self::PROPERTY_ID, $propertyId)
-      ->put(self::USER_ID, $userId)
-      ->put(self::VALUE, $value);
-      }
-     */
-    //escape OK
-    /*  public function createByPropertyName($userUID, $propertyName, $propertyValue) {
-      $newid = $this->sequence->next();
-      $sql = "INSERT INTO " . $this->getTABLE(self::OPENM_BOOK_USER_PROPERTY_VALUE_TABLE_NAME)
-      . "(" . self::ID . "," . self::PROPERTY_ID . "," . self::USER_ID . "," . self::VALUE . ")"
-      . "VALUES ("
-      . $newid
-      . ",(SELECT " . OpenM_Book_User_PropertyDAO::ID . " FROM " . $this->getTABLE(OpenM_Book_User_PropertyDAO::OPENM_BOOK_USER_PROPERTY_TABLE_NAME)
-      . " WHERE " . OpenM_Book_User_PropertyDAO::NAME . "='" . self::$db->escape($propertyName) . "' )"
-      . ",(SELECT " . OpenM_Book_UserDAO::ID . " FROM " . $this->getTABLE(OpenM_Book_UserDAO::OpenM_Book_User_Table_Name)
-      . " WHERE " . OpenM_Book_UserDAO::UID . "='" . self::$db->escape($userUID) . "')"
-      . ",'" . self::$db->escape($propertyValue) . "')";
-      self::$db->request($sql);
-
-      $retour = new HashtableString();
-      return $retour->put(self::ID, $newid);
-      } */
-
-
     public function create($propertyId, $propertyValue, $userID) {
         $newid = $this->sequence->next();
         self::$db->request(self::$db->insert($this->getTABLE(self::OPENM_BOOK_USER_PROPERTY_VALUE_TABLE_NAME), array(
