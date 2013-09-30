@@ -101,7 +101,7 @@ class OpenM_Book_UserImpl extends OpenM_BookCommonsImpl implements OpenM_Book_Us
             case self::DEFAULT_EMAIL_PROPERTY_VALUE_ID :
                 if (!OpenM_MailTool::isEMailValid($propertyValue))
                     return $this->error("mail not valid");
-                $userDAO->update($userId, OpenM_Book_UserDAO::DEFAULT_MAIL, $propertyValue);
+                $userDAO->update($userId, OpenM_Book_UserDAO::MAIL, $propertyValue);
                 break;
             case self::BIRTHDAY_ID_PROPERTY_VALUE_ID :
                 $date = new Date("$propertyValue");
@@ -286,7 +286,7 @@ class OpenM_Book_UserImpl extends OpenM_BookCommonsImpl implements OpenM_Book_Us
     /**
      * OK
      */
-    public function registerMe($firstName, $lastName, $birthDay) {
+    public function registerMe($firstName, $lastName, $birthDay, $mail) {
         if (!String::isString($firstName))
             return $this->error("firstName must be a string");
         if (!RegExp::preg("/^[a-zA-Z]([a-zA-Z]|[ \t])+[a-zA-Z]?$/", OpenM_Book_Tool::strlwr($firstName)))
@@ -299,6 +299,8 @@ class OpenM_Book_UserImpl extends OpenM_BookCommonsImpl implements OpenM_Book_Us
             return $this->error("birthDay must be a string or a numeric");
         if ($birthDay instanceof String)
             $birthDay = "$birthDay";
+        if (!OpenM_MailTool::isEMailValid($mail))
+            return $this->error("mail must be in a valid format");
         $birthDay = intval($birthDay);
         $birthDayDate = new Date($birthDay);
         if ($birthDayDate->compareTo(Date::now()->less(Delay::years(self::AGE_LIMIT_TO_REGISTER))) > 0)
@@ -318,7 +320,7 @@ class OpenM_Book_UserImpl extends OpenM_BookCommonsImpl implements OpenM_Book_Us
         OpenM_Log::debug("create personal group in DAO", __CLASS__, __METHOD__, __LINE__);
         $group = $groupDAO->create("personnal");
         OpenM_Log::debug("create user in DAO", __CLASS__, __METHOD__, __LINE__);
-        $newUser = $userDAO->create($userUID, $firstName, $lastName, $birthDay, $group->get(OpenM_Book_GroupDAO::ID));
+        $newUser = $userDAO->create($userUID, $firstName, $lastName, $birthDay, $mail, $group->get(OpenM_Book_GroupDAO::ID));
 
         OpenM_Log::debug("index user", __CLASS__, __METHOD__, __LINE__);
         $searchDAO = new OpenM_Book_SearchDAO();
@@ -331,4 +333,5 @@ class OpenM_Book_UserImpl extends OpenM_BookCommonsImpl implements OpenM_Book_Us
     }
 
 }
+
 ?>

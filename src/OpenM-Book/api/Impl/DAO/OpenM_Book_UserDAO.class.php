@@ -23,7 +23,7 @@ class OpenM_Book_UserDAO extends OpenM_Book_DAO {
     const BIRTHDAY_DISPLAYED = "birthday_displayed";
     const BIRTHDAY_YEAR_DISPLAYED = "birthday_year_displayed";
     const ACTIVATED = "activated";
-    const DEFAULT_MAIL = "mail_contact_selected";
+    const MAIL = "mail";
     const ACTIVE = 1;
 
     /**
@@ -34,7 +34,7 @@ class OpenM_Book_UserDAO extends OpenM_Book_DAO {
      * @param String $personal_groupID
      * @return HashtableString
      */
-    public function create($userUID, $firstName, $lastName, $birthday, $personal_groupID, $activated = true) {
+    public function create($userUID, $firstName, $lastName, $birthday, $mail, $personal_groupID, $activated = true) {
         $time = time();
         self::$db->request(OpenM_DB::insert($this->getTABLE(self::OpenM_Book_User_Table_Name), array(
                     self::UID => $userUID,
@@ -44,6 +44,7 @@ class OpenM_Book_UserDAO extends OpenM_Book_DAO {
                     self::FIRST_NAME => $firstName,
                     self::LAST_NAME => $lastName,
                     self::BIRTHDAY => intval($birthday),
+                    self::MAIL => $mail,
                     self::ACTIVATED => ($activated) ? 1 : 0
                 )));
         return $this->getFromUID($userUID);
