@@ -101,7 +101,7 @@ class OpenM_Book_UserImpl extends OpenM_BookCommonsImpl implements OpenM_Book_Us
             case self::DEFAULT_EMAIL_PROPERTY_VALUE_ID :
                 if (!OpenM_MailTool::isEMailValid($propertyValue))
                     return $this->error("mail not valid");
-                $userDAO->update($userId, OpenM_Book_UserDAO::DEFAULT_MAIL, $propertyValue);
+                $userDAO->update($userId, OpenM_Book_UserDAO::MAIL, $propertyValue);
                 break;
             case self::BIRTHDAY_ID_PROPERTY_VALUE_ID :
                 $date = new Date("$propertyValue");
@@ -157,7 +157,7 @@ class OpenM_Book_UserImpl extends OpenM_BookCommonsImpl implements OpenM_Book_Us
 
         OpenM_Log::debug("property owned by user", __CLASS__, __METHOD__, __LINE__);
         $propertyValueDAO->delete($propertyValueId);
-        OpenM_Log::debug("property deleted", __CLASS__, __METHOD__, __LINE__);        
+        OpenM_Log::debug("property deleted", __CLASS__, __METHOD__, __LINE__);
         $userDAO = new OpenM_Book_UserDAO();
         $userDAO->updateTime($userId);
         return $this->ok();
@@ -173,6 +173,7 @@ class OpenM_Book_UserImpl extends OpenM_BookCommonsImpl implements OpenM_Book_Us
 
     /**
      * OK
+     * TODO Visibility
      */
     public function getUserProperties($userId = null, $basicOnly = null) {
         if (!String::isStringOrNull($userId))
@@ -221,6 +222,24 @@ class OpenM_Book_UserImpl extends OpenM_BookCommonsImpl implements OpenM_Book_Us
             }
         }
 
+
+        if ($isUserCalling)
+            $return->put(self::RETURN_USER_BIRTHDAY_PARAMETER, $user->get(OpenM_Book_UserDAO::BIRTHDAY)->toInt());
+        else if ($user->get(OpenM_Book_UserDAO::BIRTHDAY_DISPLAYED)->toInt() == OpenM_Book_UserDAO::ACTIVE) {
+            if ($user->get(OpenM_Book_UserDAO::BIRTHDAY_YEAR_DISPLAYED)->toInt() == OpenM_Book_UserDAO::ACTIVE)
+                $return->put(self::RETURN_USER_BIRTHDAY_PARAMETER, $user->get(OpenM_Book_UserDAO::BIRTHDAY)->toInt());
+            else {
+                $date = new Date($user->get(OpenM_Book_UserDAO::BIRTHDAY)->toInt());
+                $return->put(self::RETURN_USER_BIRTHDAY_PARAMETER, $date->toString("d/m"));
+            }
+        }
+        if ($isUserCalling || $user->get(OpenM_Book_UserDAO::BIRTHDAY_DISPLAYED)->toInt() == OpenM_Book_UserDAO::ACTIVE) {
+            if ($user->get(OpenM_Book_UserDAO::BIRTHDAY_YEAR_DISPLAYED)->toInt() == OpenM_Book_UserDAO::ACTIVE)
+                $return->put(self::RETURN_USER_BIRTHDAY_DISPLAY_YEAR_PARAMETER, self::TRUE_PARAMETER_VALUE);
+            else
+                $return->put(self::RETURN_USER_BIRTHDAY_DISPLAY_YEAR_PARAMETER, self::FALSE_PARAMETER_VALUE);
+        }
+
         $propertyList = new HashtableString();
         if ($basicOnly === self::FALSE_PARAMETER_VALUE) {
             OpenM_Log::debug("Check user property in DAO", __CLASS__, __METHOD__, __LINE__);
@@ -257,6 +276,7 @@ class OpenM_Book_UserImpl extends OpenM_BookCommonsImpl implements OpenM_Book_Us
             else
                 OpenM_Log::debug("Property not found in DAO", __CLASS__, __METHOD__, __LINE__);
         }
+
         return $return
                         ->put(self::RETURN_USER_ID_PARAMETER, $user->get(OpenM_Book_UserDAO::ID))
                         ->put(self::RETURN_USER_FIRST_NAME_PARAMETER, $user->get(OpenM_Book_UserDAO::FIRST_NAME))
@@ -266,7 +286,7 @@ class OpenM_Book_UserImpl extends OpenM_BookCommonsImpl implements OpenM_Book_Us
     /**
      * OK
      */
-    public function registerMe($firstName, $lastName, $birthDay) {
+    public function registerMe($firstName, $lastName, $birthDay, $mail) {
         if (!String::isString($firstName))
             return $this->error("firstName must be a string");
         if (!RegExp::preg("/^[a-zA-Z]([a-zA-Z]|[ \t])+[a-zA-Z]?$/", OpenM_Book_Tool::strlwr($firstName)))
@@ -279,6 +299,8 @@ class OpenM_Book_UserImpl extends OpenM_BookCommonsImpl implements OpenM_Book_Us
             return $this->error("birthDay must be a string or a numeric");
         if ($birthDay instanceof String)
             $birthDay = "$birthDay";
+        if (!OpenM_MailTool::isEMailValid($mail))
+            return $this->error("mail must be in a valid format");
         $birthDay = intval($birthDay);
         $birthDayDate = new Date($birthDay);
         if ($birthDayDate->compareTo(Date::now()->less(Delay::years(self::AGE_LIMIT_TO_REGISTER))) > 0)
@@ -298,7 +320,7 @@ class OpenM_Book_UserImpl extends OpenM_BookCommonsImpl implements OpenM_Book_Us
         OpenM_Log::debug("create personal group in DAO", __CLASS__, __METHOD__, __LINE__);
         $group = $groupDAO->create("personnal");
         OpenM_Log::debug("create user in DAO", __CLASS__, __METHOD__, __LINE__);
-        $newUser = $userDAO->create($userUID, $firstName, $lastName, $birthDay, $group->get(OpenM_Book_GroupDAO::ID));
+        $newUser = $userDAO->create($userUID, $firstName, $lastName, $birthDay, $mail, $group->get(OpenM_Book_GroupDAO::ID));
 
         OpenM_Log::debug("index user", __CLASS__, __METHOD__, __LINE__);
         $searchDAO = new OpenM_Book_SearchDAO();
