@@ -223,13 +223,13 @@ class OpenM_Book_UserImpl extends OpenM_BookCommonsImpl implements OpenM_Book_Us
         }
 
 
+        $date = new Date($user->get(OpenM_Book_UserDAO::BIRTHDAY)->toInt());
         if ($isUserCalling)
-            $return->put(self::RETURN_USER_BIRTHDAY_PARAMETER, $user->get(OpenM_Book_UserDAO::BIRTHDAY)->toInt());
+            $return->put(self::RETURN_USER_BIRTHDAY_PARAMETER, $date->toString("d/m/Y"));
         else if ($user->get(OpenM_Book_UserDAO::BIRTHDAY_DISPLAYED)->toInt() == OpenM_Book_UserDAO::ACTIVE) {
             if ($user->get(OpenM_Book_UserDAO::BIRTHDAY_YEAR_DISPLAYED)->toInt() == OpenM_Book_UserDAO::ACTIVE)
-                $return->put(self::RETURN_USER_BIRTHDAY_PARAMETER, $user->get(OpenM_Book_UserDAO::BIRTHDAY)->toInt());
+                $return->put(self::RETURN_USER_BIRTHDAY_PARAMETER, $date->toString("d/m/Y"));
             else {
-                $date = new Date($user->get(OpenM_Book_UserDAO::BIRTHDAY)->toInt());
                 $return->put(self::RETURN_USER_BIRTHDAY_PARAMETER, $date->toString("d/m"));
             }
         }
