@@ -125,6 +125,9 @@ class OpenM_Book_AdminImpl extends OpenM_BookCommonsImpl implements OpenM_Book_A
         $groupDAO = new OpenM_Book_GroupDAO();
         OpenM_Log::debug("Create group community in DAO", __CLASS__, __METHOD__, __LINE__);
         $community = $groupDAO->create($name, OpenM_Book_GroupDAO::TYPE_COMMUNITY);
+        $groupSearchDAO = new OpenM_Book_SearchDAO();
+        OpenM_Log::debug("index community name", __CLASS__, __METHOD__, __LINE__);
+        $groupSearchDAO->index($name, $community->get(OpenM_Book_GroupDAO::ID), OpenM_Book_SearchDAO::TYPE_GENERIC_GROUP);
         OpenM_Log::debug("Create group moderator in DAO", __CLASS__, __METHOD__, __LINE__);
         $moderator = $groupDAO->create("moderator");
         OpenM_Log::debug("Create group banned users in DAO", __CLASS__, __METHOD__, __LINE__);

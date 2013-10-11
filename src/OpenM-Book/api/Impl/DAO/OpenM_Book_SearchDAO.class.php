@@ -48,7 +48,6 @@ class OpenM_Book_SearchDAO extends OpenM_Book_DAO {
         $terms = OpenM_Book_Tool::strlwr($string);
         $arrayString = explode(" ", $terms);
 
-
         $limit = min(array(sizeof($arrayString), self::MAX_TERM_NUMBER));
         $array = array(
             self::ID => $id,
@@ -81,18 +80,25 @@ class OpenM_Book_SearchDAO extends OpenM_Book_DAO {
 
         $request = "";
         $i = 0;
+
         if ($genericsGroup) {
             $request .= "(" . $this->searchGenericGroups($like) . ")";
             $i++;
         }
+        OpenM_Log::debug("t6", __CLASS__, __METHOD__, __LINE__);
+
         if ($personalGroups) {
             $request .= ((strlen($request) > 0) ? " UNION (" : "(") . $this->searchPersonalGroups($like) . ")";
             $i++;
         }
+        OpenM_Log::debug("t7", __CLASS__, __METHOD__, __LINE__);
+
         if ($user) {
             $request .= ((strlen($request) > 0) ? " UNION (" : "(") . $this->searchUsers($like) . ")";
             $i++;
         }
+        OpenM_Log::debug("t8", __CLASS__, __METHOD__, __LINE__);
+
         if (strlen($request) == 0)
             return null;
 
@@ -114,7 +120,7 @@ class OpenM_Book_SearchDAO extends OpenM_Book_DAO {
                 . ", " . OpenM_Book_GroupDAO::NAME . " as " . self::STRING
                 . ", " . self::TYPE_GENERIC_GROUP . " as " . self::TYPE
                 . " FROM "
-                . $this->getTABLE(OpenM_Book_GroupDAO::OpenM_Book_Group_TABLE_NAME) . " a"
+                . $this->getTABLE(OpenM_Book_GroupDAO::OpenM_BOOK_GROUP_TABLE_NAME) . " a"
                 . " WHERE " . OpenM_Book_GroupDAO::ID
                 . " IN ("
                 . "SELECT " . self::ID . " FROM " . $this->getTABLE(self::OpenM_BOOK_SEARCH_TABLE_NAME)
@@ -128,7 +134,7 @@ class OpenM_Book_SearchDAO extends OpenM_Book_DAO {
                 . ", " . OpenM_Book_GroupDAO::NAME . " as " . self::STRING
                 . ", " . self::TYPE_PERSONAL_GROUP . " as " . self::TYPE
                 . " FROM "
-                . $this->getTABLE(OpenM_Book_GroupDAO::OpenM_Book_Group_TABLE_NAME) . " a"
+                . $this->getTABLE(OpenM_Book_GroupDAO::OpenM_BOOK_GROUP_TABLE_NAME) . " a"
                 . " WHERE " . OpenM_Book_GroupDAO::ID
                 . " IN ("
                 . "SELECT " . self::ID . " FROM " . $this->getTABLE(self::OpenM_BOOK_SEARCH_TABLE_NAME)
