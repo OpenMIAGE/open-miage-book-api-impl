@@ -88,13 +88,13 @@ class OpenM_Book_SearchDAO extends OpenM_Book_DAO {
         OpenM_Log::debug("t6", __CLASS__, __METHOD__, __LINE__);
 
         if ($personalGroups) {
-            $request .= ((strlen($request) > 0) ? " UNION (" : "(") . $this->searchPersonalGroups($like) . ")";
+            $request .= ((strlen($request) > 0) ? " UNION ALL (" : "(") . $this->searchPersonalGroups($like) . ")";
             $i++;
         }
         OpenM_Log::debug("t7", __CLASS__, __METHOD__, __LINE__);
 
         if ($user) {
-            $request .= ((strlen($request) > 0) ? " UNION (" : "(") . $this->searchUsers($like) . ")";
+            $request .= ((strlen($request) > 0) ? " UNION ALL (" : "(") . $this->searchUsers($like) . ")";
             $i++;
         }
         OpenM_Log::debug("t8", __CLASS__, __METHOD__, __LINE__);
@@ -105,10 +105,12 @@ class OpenM_Book_SearchDAO extends OpenM_Book_DAO {
         if ($i > 1)
             $request = "($request)";
 
-        $request = "SELECT * FROM $request o ORDER BY " . self::STRING;
+        $request = "SELECT count(*) as nb, " . self::ID . ", " . self::STRING . ", " . self::TYPE . " FROM $request o GROUP BY  " . self::STRING . ", " . self::TYPE;
+        $request = "SELECT " . self::ID . ", " . self::STRING . ", " . self::TYPE . " FROM ($request) o ORDER BY nb DESC, " . self::STRING;
 
         if ($maxNumberResult == null)
-            $maxNumberResult = self::MAX_RESULT_DEFAULT_NUMBER;
+            $maxNumberResult
+                    = self::MAX_RESULT_DEFAULT_NUMBER;
         else
             $maxNumberResult = min(array(intval($maxNumberResult), self::MAX_RESULT_MAX_NUMBER));
 
@@ -120,13 +122,11 @@ class OpenM_Book_SearchDAO extends OpenM_Book_DAO {
                 . ", " . OpenM_Book_GroupDAO::NAME . " as " . self::STRING
                 . ", " . self::TYPE_GENERIC_GROUP . " as " . self::TYPE
                 . " FROM "
-                . $this->getTABLE(OpenM_Book_GroupDAO::OpenM_BOOK_GROUP_TABLE_NAME) . " a"
-                . " WHERE " . OpenM_Book_GroupDAO::ID
-                . " IN ("
-                . "SELECT " . self::ID . " FROM " . $this->getTABLE(self::OpenM_BOOK_SEARCH_TABLE_NAME)
-                . " WHERE " . $like
-                . " AND " . self::TYPE . "=" . self::TYPE_GENERIC_GROUP
-                . ")";
+                . $this->getTABLE(OpenM_Book_GroupDAO::OpenM_BOOK_GROUP_TABLE_NAME)
+                . " a, " . $this->getTABLE(self::OpenM_BOOK_SEARCH_TABLE_NAME) . " b"
+                . " WHERE a." . OpenM_Book_GroupDAO::ID . " = b." . self::ID
+                . " AND b." . self::TYPE . " = " . self::TYPE_GENERIC_GROUP
+                . " AND $like";
     }
 
     private function searchPersonalGroups($like) {
@@ -134,13 +134,11 @@ class OpenM_Book_SearchDAO extends OpenM_Book_DAO {
                 . ", " . OpenM_Book_GroupDAO::NAME . " as " . self::STRING
                 . ", " . self::TYPE_PERSONAL_GROUP . " as " . self::TYPE
                 . " FROM "
-                . $this->getTABLE(OpenM_Book_GroupDAO::OpenM_BOOK_GROUP_TABLE_NAME) . " a"
-                . " WHERE " . OpenM_Book_GroupDAO::ID
-                . " IN ("
-                . "SELECT " . self::ID . " FROM " . $this->getTABLE(self::OpenM_BOOK_SEARCH_TABLE_NAME)
-                . " WHERE " . $like
-                . " AND " . self::TYPE . "=" . self::TYPE_PERSONAL_GROUP
-                . ")";
+                . $this->getTABLE(OpenM_Book_GroupDAO::OpenM_BOOK_GROUP_TABLE_NAME) . " a, "
+                . $this->getTABLE(self::OpenM_BOOK_SEARCH_TABLE_NAME) . " b"
+                . " WHERE a." . OpenM_Book_GroupDAO::ID . " = b." . self::ID
+                . " AND b." . self::TYPE . " = " . self::TYPE_PERSONAL_GROUP
+                . " AND $like";
     }
 
     private function searchUsers($like) {
@@ -148,19 +146,26 @@ class OpenM_Book_SearchDAO extends OpenM_Book_DAO {
                 . ", " . self::$db->concat(array(OpenM_Book_UserDAO::FIRST_NAME, "' '", OpenM_Book_UserDAO::LAST_NAME)) . " as " . self::STRING
                 . ", " . self::TYPE_USER . " as " . self::TYPE
                 . " FROM "
-                . $this->getTABLE(OpenM_Book_UserDAO::OpenM_Book_User_Table_Name) . " a"
-                . " WHERE " . OpenM_Book_UserDAO::ACTIVATED . "=" . OpenM_Book_UserDAO::ACTIVE . " AND " . OpenM_Book_UserDAO::ID
-                . " IN ("
-                . "SELECT " . self::ID . " FROM " . $this->getTABLE(self::OpenM_BOOK_SEARCH_TABLE_NAME)
-                . " WHERE " . $like
-                . " AND " . self::TYPE . "=" . self::TYPE_USER
-                . ")";
+                . $this->getTABLE(OpenM_Book_UserDAO::OpenM_Book_User_Table_Name) . " a, "
+                . $this->getTABLE(self::OpenM_BOOK_SEARCH_TABLE_NAME) . " b"
+                . " WHERE a." . OpenM_Book_UserDAO::ACTIVATED . " = " . OpenM_Book_UserDAO::ACTIVE
+                . " AND a." . OpenM_Book_UserDAO::ID . " = b." . self::ID
+                . " AND b." . self::TYPE . " = " . self::TYPE_USER
+                . " AND " . $like;
     }
 
     public function deleteFromGroup($groupId) {
         self::$db->request(OpenM_DB::delete($this->getTABLE(self::OpenM_BOOK_SEARCH_TABLE_NAME), array(
                     self::ID => intval($groupId)
-                )) . " AND " . self::TYPE . " IN (" . self::TYPE_GENERIC_GROUP . ", " . self::TYPE_PERSONAL_GROUP . ")");
+                )) . " AND " . self::TYPE . " IN(" . self::TYPE_GENERIC_GROUP . ", " . self::TYPE_PERSONAL_GROUP . ") 
+
+        
+
+        
+
+        
+
+        ");
     }
 
 }
