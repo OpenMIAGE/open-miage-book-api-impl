@@ -65,6 +65,15 @@ class OpenM_BookImpl extends OpenM_BookCommonsImpl implements OpenM_Book {
 
         OpenM_Log::debug("register user in this community", __CLASS__, __METHOD__, __LINE__);
         $communityUsersDAO->create($communityId, $this->user->get(OpenM_Book_UserDAO::ID)->toInt(), !$validationRequired);
+
+        OpenM_Log::debug("create visibility group", __CLASS__, __METHOD__, __LINE__);
+        $groupDAO = new OpenM_Book_GroupDAO();
+        $group = $groupDAO->create("visibility of " . $communityId);
+        $groupVisibilityDAO = new OpenM_Book_Community_VisibilityDAO();
+        $groupVisibilityDAO->create($this->user->get(OpenM_Book_UserDAO::ID)->toInt(), $communityId, $group->get(OpenM_Book_GroupDAO::ID));
+        OpenM_Log::debug("add community in visibility group", __CLASS__, __METHOD__, __LINE__);
+        $groupContentGroupDAO = new OpenM_Book_Group_Content_GroupDAO();
+        $groupContentGroupDAO->create($group->get(OpenM_Book_GroupDAO::ID), $communityId);
         return $this->ok();
     }
 
@@ -394,7 +403,7 @@ class OpenM_BookImpl extends OpenM_BookCommonsImpl implements OpenM_Book {
 
         OpenM_Log::debug("search users valid in DAO", __CLASS__, __METHOD__, __LINE__);
         $communityContentUserDAO = new OpenM_Book_Community_Content_UserDAO();
-        $users = $communityContentUserDAO->getUsers($communityId, $start, $numberOfResult);
+        $users = $communityContentUserDAO->getUsers($this->user->get(OpenM_Book_UserDAO::ID)->toInt(), $communityId, $start, $numberOfResult);
         $userList = new HashtableString();
         $e = $users->enum();
         $i = 0;
@@ -454,7 +463,7 @@ class OpenM_BookImpl extends OpenM_BookCommonsImpl implements OpenM_Book {
 
         OpenM_Log::debug("search users valid in DAO", __CLASS__, __METHOD__, __LINE__);
         $communityContentUserDAO = new OpenM_Book_Community_Content_UserDAO();
-        $users = $communityContentUserDAO->getUsers($communityId, $start, $numberOfResult, false, $this->user->get(OpenM_Book_UserDAO::ID)->toInt());
+        $users = $communityContentUserDAO->getUsers($this->user->get(OpenM_Book_UserDAO::ID)->toInt(), $communityId, $start, $numberOfResult, false, $this->user->get(OpenM_Book_UserDAO::ID)->toInt());
         $userList = new HashtableString();
         $e = $users->enum();
         $i = 0;
@@ -491,6 +500,15 @@ class OpenM_BookImpl extends OpenM_BookCommonsImpl implements OpenM_Book {
             return $this->ok();
         OpenM_Log::debug("un register user from community", __CLASS__, __METHOD__, __LINE__);
         $communityContentUser->delete($communityId, $this->user->get(OpenM_Book_UserDAO::ID)->toInt());
+        OpenM_Log::debug("recover visibility group", __CLASS__, __METHOD__, __LINE__);
+        $groupVisibilityDAO = new OpenM_Book_Community_VisibilityDAO();
+        $groupVisibility = $groupVisibilityDAO->get($this->user->get(OpenM_Book_UserDAO::ID)->toInt(), $communityId);
+        if ($groupVisibility !== null) {
+            OpenM_Log::debug("remove visibility group", __CLASS__, __METHOD__, __LINE__);
+            $groupDAO = new OpenM_Book_GroupDAO();
+            $groupDAO->delete($groupVisibility->get(OpenM_Book_Community_VisibilityDAO::COMMUNITY_ID));
+            $groupVisibilityDAO->delete($this->user->get(OpenM_Book_UserDAO::ID)->toInt(), $communityId);
+        }
         return $this->ok();
     }
 
