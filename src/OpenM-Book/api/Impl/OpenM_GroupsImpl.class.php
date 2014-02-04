@@ -117,7 +117,7 @@ class OpenM_GroupsImpl extends OpenM_BookCommonsImpl implements OpenM_Groups {
         $uid = $this->getManager()->getID();
         OpenM_Log::debug("search my communities in DAO", __CLASS__, __METHOD__, __LINE__);
         $groupContentUserDAO = new OpenM_Book_Group_Content_UserDAO();
-        $communities = $groupContentUserDAO->getFromUID($uid, true, false);
+        $communities = $groupContentUserDAO->getCommunitiesFromUID($uid, false, true);
         OpenM_Log::debug("translate communities to return format", __CLASS__, __METHOD__, __LINE__);
         $r = $this->getGroups($communities, false);
         $return = $this->ok()->put(self::RETURN_GROUP_LIST_PARAMETER, $r);
@@ -171,6 +171,8 @@ class OpenM_GroupsImpl extends OpenM_BookCommonsImpl implements OpenM_Groups {
             $g = new HashtableString();
             $g->put(self::RETURN_GROUP_ID_PARAMETER, $group->get(OpenM_Book_GroupDAO::ID)->toInt())
                     ->put(self::RETURN_GROUP_NAME_PARAMETER, $group->get(OpenM_Book_GroupDAO::NAME));
+            if ($group->containsKey(OpenM_Book_Community_Content_UserDAO::IS_VALIDATED))
+                $g->put(self::RETURN_USER_VALIDATED_IN_COMMUNITY_PARAMETER, ($group->get(OpenM_Book_Community_Content_UserDAO::IS_VALIDATED)->toInt() === OpenM_Book_Community_Content_UserDAO::VALIDATED) ? self::TRUE_PARAMETER_VALUE : self::FALSE_PARAMETER_VALUE);
 
             if ($displayType)
                 $g->put(self::RETURN_GROUP_TYPE_PARAMETER, $group->get(OpenM_Book_GroupDAO::TYPE)->toInt());
