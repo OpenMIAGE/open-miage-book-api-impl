@@ -157,15 +157,7 @@ class OpenM_Book_SearchDAO extends OpenM_Book_DAO {
     public function deleteFromGroup($groupId) {
         self::$db->request(OpenM_DB::delete($this->getTABLE(self::OpenM_BOOK_SEARCH_TABLE_NAME), array(
                     self::ID => intval($groupId)
-                )) . " AND " . self::TYPE . " IN(" . self::TYPE_GENERIC_GROUP . ", " . self::TYPE_PERSONAL_GROUP . ") 
-
-        
-
-        
-
-        
-
-        ");
+                )) . " AND " . self::TYPE . " IN(" . self::TYPE_GENERIC_GROUP . ", " . self::TYPE_PERSONAL_GROUP . ")");
     }
 
 }
