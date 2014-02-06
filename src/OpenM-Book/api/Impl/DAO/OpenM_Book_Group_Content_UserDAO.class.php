@@ -52,6 +52,10 @@ class OpenM_Book_Group_Content_UserDAO extends OpenM_Book_DAO {
         )));
     }
 
+    public function isUserInGroup($user_uid_or_id, $groupId, $andValidated = true, $groupOnly = false, $communityOnly = false) {
+        return $this->isUserInGroups($user_uid_or_id, array($groupId), $andValidated, $groupOnly, $communityOnly);
+    }
+
     public function isUserInGroups($user_uid_or_id, $groupIdList, $andValidated = true, $groupOnly = false, $communityOnly = false) {
         if (is_int($user_uid_or_id))
             return $this->_isUserInGroups(null, $user_uid_or_id, $groupIdList, $andValidated, $groupOnly, $communityOnly);

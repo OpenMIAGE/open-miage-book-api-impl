@@ -64,7 +64,6 @@ class OpenM_GroupsImpl extends OpenM_BookCommonsImpl implements OpenM_Groups {
         if ($userDAO->getFromId($userId) == null)
             return $this->error(self::RETURN_ERROR_MESSAGE_USER_NOT_FOUND_VALUE);
 
-
         OpenM_Log::debug("check if user isn't in target group", __CLASS__, __METHOD__, __LINE__);
         $groupContentUser = new OpenM_Book_Group_Content_UserDAO();
         if ($groupContentUser->getFromUser($userId) === null)

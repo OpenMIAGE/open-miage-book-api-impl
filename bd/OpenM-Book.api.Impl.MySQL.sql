@@ -179,14 +179,14 @@ CREATE TABLE IF NOT EXISTS `OpenM_BOOK_USER` (
   `last_name` varchar(30) NOT NULL,
   `photo` bigint(16) DEFAULT NULL,
   `birthday` int(11) NOT NULL,
-  `birthday_displayed` tinyint(1) NOT NULL DEFAULT '0',
   `birthday_year_displayed` tinyint(1) NOT NULL DEFAULT '0',
+  `birthday_visibility` bigint(16) NOT NULL,
   `activated` tinyint(1) NOT NULL DEFAULT '1',
   `mail` varchar(255) NOT NULL,
   PRIMARY KEY (`user_id`),
   UNIQUE KEY `user_id_Unique` (`uid`),
   KEY `first_name_last_name` (`first_name`,`last_name`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8 AUTO_INCREMENT=73 ;
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8 AUTO_INCREMENT=76 ;
 
 DROP TABLE IF EXISTS `OpenM_BOOK_USER_PROPERTY`;
 CREATE TABLE IF NOT EXISTS `OpenM_BOOK_USER_PROPERTY` (
@@ -202,13 +202,7 @@ CREATE TABLE IF NOT EXISTS `OpenM_BOOK_USER_PROPERTY_VALUE` (
   `property_id` int(11) NOT NULL,
   `user_id` int(11) NOT NULL,
   `value` text,
+  `visibility` bigint(16) NOT NULL,
   PRIMARY KEY (`value_id`),
   KEY `property_id` (`property_id`,`user_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
-
-DROP TABLE IF EXISTS `OpenM_BOOK_USER_PROPERTY_VALUE_VISIBILITY`;
-CREATE TABLE IF NOT EXISTS `OpenM_BOOK_USER_PROPERTY_VALUE_VISIBILITY` (
-  `value_id` bigint(16) NOT NULL,
-  `group_id` bigint(16) NOT NULL,
-  PRIMARY KEY (`value_id`,`group_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
