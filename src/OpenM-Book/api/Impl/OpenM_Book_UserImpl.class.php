@@ -47,13 +47,16 @@ class OpenM_Book_UserImpl extends OpenM_BookCommonsImpl implements OpenM_Book_Us
             return $this->error("propertyId not found");
 
         OpenM_Log::debug("propertyId exist in DAO", __CLASS__, __METHOD__, __LINE__);
+        $groupDAO = new OpenM_Book_GroupDAO();
+        OpenM_Log::debug("create property visibility group", __CLASS__, __METHOD__, __LINE__);
+        $group = $groupDAO->create("visibility");
         $userPropertyValueDAO = new OpenM_Book_User_Property_ValueDAO();
         OpenM_Log::debug("create property value in DAO", __CLASS__, __METHOD__, __LINE__);
-        $value = $userPropertyValueDAO->create($propertyId, $propertyValue, $user->get(OpenM_Book_UserDAO::ID)->toInt());
+        $value = $userPropertyValueDAO->create($propertyId, $propertyValue, $user->get(OpenM_Book_UserDAO::ID), $group->get(OpenM_Book_GroupDAO::ID));
 
         $userDAO = new OpenM_Book_UserDAO();
         OpenM_Log::debug("update user update time in DAO", __CLASS__, __METHOD__, __LINE__);
-        $userDAO->updateTime($user->get(OpenM_Book_UserDAO::ID)->toInt());
+        $userDAO->updateTime($user->get(OpenM_Book_UserDAO::ID));
 
         return $this->ok()->put(self::RETURN_USER_PROPERTY_VALUE_ID_PARAMETER, $value->get(OpenM_Book_User_Property_ValueDAO::ID));
     }
@@ -157,6 +160,9 @@ class OpenM_Book_UserImpl extends OpenM_BookCommonsImpl implements OpenM_Book_Us
 
         OpenM_Log::debug("property owned by user", __CLASS__, __METHOD__, __LINE__);
         $propertyValueDAO->delete($propertyValueId);
+        OpenM_Log::debug("delete visibility group", __CLASS__, __METHOD__, __LINE__);
+        $groupDAO = new OpenM_Book_GroupDAO();
+        $groupDAO->delete($propertyValue->get(OpenM_Book_User_Property_ValueDAO::VISIBILITY));
         OpenM_Log::debug("property deleted", __CLASS__, __METHOD__, __LINE__);
         $userDAO = new OpenM_Book_UserDAO();
         $userDAO->updateTime($userId);

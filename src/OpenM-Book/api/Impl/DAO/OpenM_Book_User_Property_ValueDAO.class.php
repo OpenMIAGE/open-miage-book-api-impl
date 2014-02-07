@@ -19,20 +19,22 @@ class OpenM_Book_User_Property_ValueDAO extends OpenM_Book_DAO {
     const VALUE = "value";
     const VISIBILITY = "visibility";
 
-    public function create($propertyId, $propertyValue, $userID) {
+    public function create($propertyId, $propertyValue, $userID, $visibilityId) {
         $newid = $this->sequence->next();
         self::$db->request(self::$db->insert($this->getTABLE(self::OPENM_BOOK_USER_PROPERTY_VALUE_TABLE_NAME), array(
                     self::ID => $newid,
-                    self::PROPERTY_ID => intval($propertyId),
-                    self::USER_ID => intval($userID),
-                    self::VALUE => self::$db->escape($propertyValue)
+                    self::PROPERTY_ID => intval("$propertyId"),
+                    self::USER_ID => intval("$userID"),
+                    self::VALUE => self::$db->escape($propertyValue),
+                    self::VISIBILITY => intval("$visibilityId")
         )));
 
         $retour = new HashtableString();
         return $retour->put(self::ID, $newid)
                         ->put(self::PROPERTY_ID, $propertyId)
                         ->put(self::USER_ID, $userID)
-                        ->put(self::VALUE, $propertyValue);
+                        ->put(self::VALUE, $propertyValue)
+                        ->put(self::VISIBILITY, $visibilityId);
     }
 
     public function update($propertyValueId, $value) {

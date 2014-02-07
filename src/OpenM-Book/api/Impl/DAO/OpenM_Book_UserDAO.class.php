@@ -85,7 +85,7 @@ class OpenM_Book_UserDAO extends OpenM_Book_DAO {
         self::$db->request(OpenM_DB::update($this->getTABLE(self::OpenM_Book_User_Table_Name), array(
                     self::UPDATE_TIME => $time
                         ), array(
-                    self::ID => $userId
+                    self::ID => intval("$userId")
         )));
         return TRUE;
     }

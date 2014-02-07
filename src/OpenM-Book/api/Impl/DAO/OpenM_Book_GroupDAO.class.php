@@ -111,8 +111,9 @@ class OpenM_Book_GroupDAO extends OpenM_Book_DAO {
      * @return boolean
      */
     public function delete($groupId, $cascade = true) {
+        $groupId = intval("$groupId");
         self::$db->request(OpenM_DB::delete($this->getTABLE(self::OpenM_BOOK_GROUP_TABLE_NAME), array(
-                    self::ID => intval($groupId)
+                    self::ID => $groupId
         )));
 
         if ($cascade) {
