@@ -109,12 +109,20 @@ class OpenM_Book_SearchDAO extends OpenM_Book_DAO {
         $request = "SELECT " . self::ID . ", " . self::STRING . ", " . self::TYPE . " FROM ($request) o ORDER BY nb DESC, " . self::STRING;
 
         if ($maxNumberResult == null)
-            $maxNumberResult
-                    = self::MAX_RESULT_DEFAULT_NUMBER;
+            $maxNumberResult = self::MAX_RESULT_DEFAULT_NUMBER;
         else
             $maxNumberResult = min(array(intval($maxNumberResult), self::MAX_RESULT_MAX_NUMBER));
 
-        return self::$db->request_ArrayList(self::$db->limit($request, $maxNumberResult));
+        $return = new HashtableString();
+        $sql = self::$db->limit($request, $maxNumberResult);
+        $result = self::$db->request($sql, self::ID);
+        $i = 0;
+        while ($line = self::$db->fetch_array($result)) {
+            $l = HashtableString::from($line);
+            $return->put($i, $l->put(self::STRING, self::$db->unescape($l->get(self::STRING))));
+            $i++;
+        }
+        return $return;
     }
 
     private function searchGenericGroups($like) {

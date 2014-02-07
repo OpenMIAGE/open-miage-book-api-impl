@@ -337,10 +337,10 @@ class OpenM_GroupsImpl extends OpenM_BookCommonsImpl implements OpenM_Groups {
         $searchDAO = new OpenM_Book_SearchDAO();
         $result = $searchDAO->search($terms, $maxNumberResult, !$userOnly, !$userOnly);
         OpenM_Log::debug("result found : " . $result->size(), __CLASS__, __METHOD__, __LINE__);
-        $e = $result->enum();
+        $e = $result->keys();
         $resultList = new HashtableString();
         while ($e->hasNext()) {
-            $r = $e->next();
+            $r = $result->get($e->next());
             $row = new HashtableString();
             $type = (($r->get(OpenM_Book_SearchDAO::TYPE)->toInt() === OpenM_Book_SearchDAO::TYPE_USER) ?
                             self::RETURN_RESULT_TYPE_USER_VALUE : (($r->get(OpenM_Book_SearchDAO::TYPE)->toInt() === OpenM_Book_SearchDAO::TYPE_GENERIC_GROUP) ?

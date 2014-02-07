@@ -16,15 +16,15 @@ class OpenM_Book_User_PropertyDAO extends OpenM_Book_DAO {
     //champs bdd
     const ID = "property_id";
     const NAME = "name";
+    const REGEXP = "reg_exp";
 
-    //propriétés présente 
-    const PROPERTY_EMAIL = "email";
-    const PROPERTY_PREFERED_NAME = "nom long";
-
-    public function create($propertyName) {
-        self::$db->request(OpenM_DB::insert($this->getTABLE(self::OPENM_BOOK_USER_PROPERTY_TABLE_NAME), array(
-                    self::NAME => $propertyName
-                )));
+    public function create($propertyName, $regexp = null) {
+        $array = array(
+            self::NAME => $propertyName
+        );
+        if ($regexp !== null)
+            $array[self::REGEXP] = $regexp;
+        self::$db->request(OpenM_DB::insert($this->getTABLE(self::OPENM_BOOK_USER_PROPERTY_TABLE_NAME), $array));
         return $this->getByName($propertyName);
     }
 
@@ -32,13 +32,13 @@ class OpenM_Book_User_PropertyDAO extends OpenM_Book_DAO {
     public function getByName($propertyName) {
         return self::$db->request_fetch_HashtableString(OpenM_DB::select($this->getTABLE(self::OPENM_BOOK_USER_PROPERTY_TABLE_NAME), array(
                             self::NAME => self::$db->escape($propertyName)
-                        )));
+        )));
     }
 
     public function getById($propertyId) {
         return self::$db->request_fetch_HashtableString(OpenM_DB::select($this->getTABLE(self::OPENM_BOOK_USER_PROPERTY_TABLE_NAME), array(
-                            self::ID => intval($propertyId)
-                        )));
+                            self::ID => intval("$propertyId")
+        )));
     }
 
     public function getAll() {
@@ -50,8 +50,8 @@ class OpenM_Book_User_PropertyDAO extends OpenM_Book_DAO {
         self::$db->request(OpenM_DB::update($this->getTABLE(self::OPENM_BOOK_USER_PROPERTY_TABLE_NAME), array(
                     self::NAME => $name
                         ), array(
-                    self::ID => $propertyId
-                )));
+                    self::ID => intval("$propertyId")
+        )));
         return TRUE;
     }
 

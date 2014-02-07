@@ -56,9 +56,10 @@ class OpenM_Book_GroupDAO extends OpenM_Book_DAO {
      * @return HashtableString 
      */
     public function get($groupId) {
-        return self::$db->request_fetch_HashtableString(OpenM_DB::select($this->getTABLE(self::OpenM_BOOK_GROUP_TABLE_NAME), array(
-                            self::ID => intval($groupId),
+        $return = self::$db->request_fetch_HashtableString(OpenM_DB::select($this->getTABLE(self::OpenM_BOOK_GROUP_TABLE_NAME), array(
+                    self::ID => intval($groupId),
         )));
+        return $return->put(self::NAME, self::$db->unescape($return->get(self::NAME)));
     }
 
     /**

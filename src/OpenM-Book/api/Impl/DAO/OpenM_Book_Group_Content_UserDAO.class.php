@@ -159,7 +159,7 @@ class OpenM_Book_Group_Content_UserDAO extends OpenM_Book_DAO {
     }
 
     public function getCommunitiesFromUID($uid) {
-        return self::$db->request_HashtableString($this->_getCommunitiesFromUID($uid, false, true), OpenM_Book_GroupDAO::ID);
+        return $this->_unescape(self::$db->request_HashtableString($this->_getCommunitiesFromUID($uid, false, true), OpenM_Book_GroupDAO::ID), OpenM_Book_GroupDAO::NAME);
     }
 
     private function _getCommunitiesFromUID($uid, $validated = true, $withValidationStatus = false) {
@@ -178,30 +178,40 @@ class OpenM_Book_Group_Content_UserDAO extends OpenM_Book_DAO {
                 . " AND " . OpenM_Book_GroupDAO::TYPE . " = " . OpenM_Book_GroupDAO::TYPE_COMMUNITY;
     }
 
+    private function _unescape(HashtableString $result, $var) {
+        $e = $result->keys();
+        while ($e->hasNext()) {
+            $key = $e->next();
+            $row = $result->get($key);
+            $row->put($var, self::$db->unescape($row->get("$var")));
+        }
+        return $result;
+    }
+
     public function getMyCommunitiesAncestors($userId) {
-        return self::$db->request_HashtableString("SELECT u.*, v." . OpenM_Book_GroupDAO::NAME
-                        . " FROM (" . OpenM_DB::select($this->getTABLE(OpenM_Book_Group_Content_GroupDAO::OPENM_BOOK_GROUP_CONTENT_GROUP_TABLE_NAME))
-                        . " WHERE " . OpenM_Book_Group_Content_GroupDAO::GROUP_ID . " IN ("
-                        . OpenM_DB::select($this->getTABLE(OpenM_Book_Group_Content_GroupDAO::OPENM_BOOK_GROUP_CONTENT_GROUP_INDEX_TABLE_NAME), array(), array(
-                            OpenM_Book_Group_Content_GroupDAO::GROUP_PARENT_ID
-                        ))
-                        . " WHERE " . OpenM_Book_Group_Content_GroupDAO::GROUP_ID . " IN ("
-                        . OpenM_DB::select($this->getTABLE(OpenM_Book_Community_Content_UserDAO::OPENM_BOOK_COMMUNITY_CONTENT_USER_TABLE_NAME), array(
-                            OpenM_Book_Community_Content_UserDAO::USER_ID => intval($userId)
-                                ), array(
-                            OpenM_Book_Community_Content_UserDAO::COMMUNITY_ID
-                        ))
-                        . ")) OR " . OpenM_Book_Group_Content_GroupDAO::GROUP_ID . " IN ("
-                        . OpenM_DB::select($this->getTABLE(OpenM_Book_Community_Content_UserDAO::OPENM_BOOK_COMMUNITY_CONTENT_USER_TABLE_NAME), array(
-                            OpenM_Book_Community_Content_UserDAO::USER_ID => intval($userId)
-                                ), array(
-                            OpenM_Book_Community_Content_UserDAO::COMMUNITY_ID
-                        ))
-                        . ")) u, "
-                        . $this->getTABLE(OpenM_Book_GroupDAO::OpenM_BOOK_GROUP_TABLE_NAME) . " v "
-                        . " WHERE v." . OpenM_Book_GroupDAO::ID
-                        . "=u." . OpenM_Book_Group_Content_GroupDAO::GROUP_PARENT_ID
-                        . " GROUP BY u." . OpenM_Book_Group_Content_GroupDAO::GROUP_ID, OpenM_Book_Group_Content_GroupDAO::GROUP_ID);
+        return $this->_unescape(self::$db->request_HashtableString("SELECT u.*, v." . OpenM_Book_GroupDAO::NAME
+                                . " FROM (" . OpenM_DB::select($this->getTABLE(OpenM_Book_Group_Content_GroupDAO::OPENM_BOOK_GROUP_CONTENT_GROUP_TABLE_NAME))
+                                . " WHERE " . OpenM_Book_Group_Content_GroupDAO::GROUP_ID . " IN ("
+                                . OpenM_DB::select($this->getTABLE(OpenM_Book_Group_Content_GroupDAO::OPENM_BOOK_GROUP_CONTENT_GROUP_INDEX_TABLE_NAME), array(), array(
+                                    OpenM_Book_Group_Content_GroupDAO::GROUP_PARENT_ID
+                                ))
+                                . " WHERE " . OpenM_Book_Group_Content_GroupDAO::GROUP_ID . " IN ("
+                                . OpenM_DB::select($this->getTABLE(OpenM_Book_Community_Content_UserDAO::OPENM_BOOK_COMMUNITY_CONTENT_USER_TABLE_NAME), array(
+                                    OpenM_Book_Community_Content_UserDAO::USER_ID => intval($userId)
+                                        ), array(
+                                    OpenM_Book_Community_Content_UserDAO::COMMUNITY_ID
+                                ))
+                                . ")) OR " . OpenM_Book_Group_Content_GroupDAO::GROUP_ID . " IN ("
+                                . OpenM_DB::select($this->getTABLE(OpenM_Book_Community_Content_UserDAO::OPENM_BOOK_COMMUNITY_CONTENT_USER_TABLE_NAME), array(
+                                    OpenM_Book_Community_Content_UserDAO::USER_ID => intval($userId)
+                                        ), array(
+                                    OpenM_Book_Community_Content_UserDAO::COMMUNITY_ID
+                                ))
+                                . ")) u, "
+                                . $this->getTABLE(OpenM_Book_GroupDAO::OpenM_BOOK_GROUP_TABLE_NAME) . " v "
+                                . " WHERE v." . OpenM_Book_GroupDAO::ID
+                                . "=u." . OpenM_Book_Group_Content_GroupDAO::GROUP_PARENT_ID
+                                . " GROUP BY u." . OpenM_Book_Group_Content_GroupDAO::GROUP_ID, OpenM_Book_Group_Content_GroupDAO::GROUP_ID), OpenM_Book_GroupDAO::NAME);
     }
 
     private function getGroupsFromUID($uid) {

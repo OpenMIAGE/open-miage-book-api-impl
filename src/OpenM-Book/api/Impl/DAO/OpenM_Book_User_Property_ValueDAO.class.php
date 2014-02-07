@@ -64,7 +64,7 @@ class OpenM_Book_User_Property_ValueDAO extends OpenM_Book_DAO {
         )));
     }
 
-    public function getProperties($userId) {
+    private function _getProperties($userId) {
         $sql = "SELECT * FROM (SELECT * FROM ("
                 . "SELECT  p." . OpenM_Book_User_PropertyDAO::ID . " ," . OpenM_Book_User_PropertyDAO::NAME . " , " . self::ID . " ," . self::VALUE
                 . " FROM " . $this->getTABLE(OpenM_Book_User_PropertyDAO::OPENM_BOOK_USER_PROPERTY_TABLE_NAME) . " as p, "
@@ -87,12 +87,13 @@ class OpenM_Book_User_Property_ValueDAO extends OpenM_Book_DAO {
         $return = new HashtableString();
         $i = 0;
         while ($line = self::$db->fetch_array($result)) {
-            $return->put($i, HashtableString::from($line));
+            $l = HashtableString::from($line);
+            $return->put($i, $l->put(self::VALUE, self::$db->unescape($l->get(self::VALUE))));
             $i++;
         }
         return $return;
     }
-
+    
     public function getPropertiesOfUser($userId, $userIdCalling) {
         $sql = "SELECT  p." . OpenM_Book_User_PropertyDAO::ID . " ," . OpenM_Book_User_PropertyDAO::NAME . " , v." . self::ID . " , v." . self::VALUE
                 . " FROM " . $this->getTABLE(OpenM_Book_User_PropertyDAO::OPENM_BOOK_USER_PROPERTY_TABLE_NAME) . " p, "
@@ -109,7 +110,8 @@ class OpenM_Book_User_Property_ValueDAO extends OpenM_Book_DAO {
         $return = new HashtableString();
         $i = 0;
         while ($line = self::$db->fetch_array($result)) {
-            $return->put($i, HashtableString::from($line));
+            $l = HashtableString::from($line);
+            $return->put($i, $l->put(self::VALUE, self::$db->unescape($l->get(self::VALUE))));
             $i++;
         }
         return $return;
@@ -134,7 +136,7 @@ class OpenM_Book_User_Property_ValueDAO extends OpenM_Book_DAO {
 
     public function getFromUser($userIdTarget, $userIdCalling = null) {
         if (intval("$userIdTarget") === intval("$userIdCalling"))
-            return $this->getProperties($userIdTarget);
+            return $this->_getProperties($userIdTarget);
         return $this->getPropertiesOfUser($userIdTarget, $userIdCalling);
     }
 
