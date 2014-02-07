@@ -46,6 +46,10 @@ class OpenM_Book_UserImpl extends OpenM_BookCommonsImpl implements OpenM_Book_Us
         if ($property == null)
             return $this->error("propertyId not found");
 
+        $error = $this->_checkValue($property->get(OpenM_Book_User_PropertyDAO::ID), $propertyValue);
+        if ($error !== null)
+            return $error;
+
         OpenM_Log::debug("propertyId exist in DAO", __CLASS__, __METHOD__, __LINE__);
         $groupDAO = new OpenM_Book_GroupDAO();
         OpenM_Log::debug("create property visibility group", __CLASS__, __METHOD__, __LINE__);
@@ -119,6 +123,10 @@ class OpenM_Book_UserImpl extends OpenM_BookCommonsImpl implements OpenM_Book_Us
                 $userPropertyValue = $propertyValueDAO->get($propertyValueId);
                 if ($userPropertyValue->size() == 0)
                     return $this->error(self::RETURN_ERROR_MESSAGE_PROPERTY_NOTFOUND_VALUE);
+                OpenM_Log::debug("search property in DAO", __CLASS__, __METHOD__, __LINE__);
+                $error = $this->_checkValue($userPropertyValue->get(OpenM_Book_User_Property_ValueDAO::PROPERTY_ID), $propertyValue);
+                if ($error !== null)
+                    return $error;
                 OpenM_Log::debug("check if property is property of user", __CLASS__, __METHOD__, __LINE__);
                 if ($userPropertyValue->get(OpenM_Book_User_Property_ValueDAO::USER_ID) != $this->user->get(OpenM_Book_UserDAO::ID))
                     return $this->error("it's not your property");
@@ -128,6 +136,17 @@ class OpenM_Book_UserImpl extends OpenM_BookCommonsImpl implements OpenM_Book_Us
                 break;
         }
         return $this->ok();
+    }
+
+    private function _checkValue($propertyId, $propertyValue) {
+        $propertyDAO = new OpenM_Book_User_PropertyDAO();
+        $property = $propertyDAO->getById($propertyId);
+        OpenM_Log::debug("check if property value respect property reg_exp", __CLASS__, __METHOD__, __LINE__);
+        if ($property === null)
+            return $this->error("property not found");
+        if ($property->get(OpenM_Book_User_PropertyDAO::REGEXP) . "" !== "" &&
+                !RegExp::ereg("^" . $property->get(OpenM_Book_User_PropertyDAO::REGEXP) . "$", $propertyValue))
+            return $this->error("property not respect reg_exp : ^" . $property->get(OpenM_Book_User_PropertyDAO::REGEXP) . "$");
     }
 
     /**

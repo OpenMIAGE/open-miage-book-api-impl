@@ -30,7 +30,8 @@ CREATE TABLE IF NOT EXISTS `OpenM_BOOK_COMMUNITY_CONTENT_USER_VALIDATION` (
   `user_id` int(11) NOT NULL,
   `validated_by` int(11) NOT NULL,
   `time` int(12) NOT NULL,
-  `message` varchar(255) NOT NULL
+  `message` varchar(255) NOT NULL,
+  PRIMARY KEY (`group_id`,`user_id`,`validated_by`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 DROP TABLE IF EXISTS `OpenM_BOOK_COMMUNITY_MODERATOR`;
@@ -109,13 +110,8 @@ CREATE TABLE IF NOT EXISTS `OpenM_BOOK_INVITATION` (
   `mail` varchar(255) NOT NULL,
   `from` int(11) NOT NULL,
   `time` int(12) NOT NULL,
-  `recall` tinyint(1) NOT NULL DEFAULT '0'
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
-
-DROP TABLE IF EXISTS `OpenM_BOOK_KEEPINFORM`;
-CREATE TABLE IF NOT EXISTS `OpenM_BOOK_KEEPINFORM` (
-  `email` varchar(20) NOT NULL,
-  `date` bigint(12) NOT NULL
+  `recall` tinyint(1) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`mail`,`from`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 DROP TABLE IF EXISTS `OpenM_BOOK_SECTION`;
@@ -192,8 +188,10 @@ DROP TABLE IF EXISTS `OpenM_BOOK_USER_PROPERTY`;
 CREATE TABLE IF NOT EXISTS `OpenM_BOOK_USER_PROPERTY` (
   `property_id` int(11) NOT NULL AUTO_INCREMENT,
   `name` varchar(255) NOT NULL,
+  `reg_exp` varchar(100) NOT NULL,
   PRIMARY KEY (`property_id`),
-  UNIQUE KEY `name` (`name`)
+  UNIQUE KEY `name` (`name`),
+  UNIQUE KEY `name_2` (`name`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8 AUTO_INCREMENT=10 ;
 
 DROP TABLE IF EXISTS `OpenM_BOOK_USER_PROPERTY_VALUE`;
