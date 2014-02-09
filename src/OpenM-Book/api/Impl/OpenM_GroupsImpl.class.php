@@ -353,7 +353,7 @@ class OpenM_GroupsImpl extends OpenM_BookCommonsImpl implements OpenM_Groups {
         return $this->ok()->put(self::RETURN_RESULT_LIST_PARAMETER, $resultList);
     }
 
-    public function getGroupsFromGroup($groupId) {
+    public function getGroupContent($groupId) {
         if (!OpenM_Book_Tool::isGroupIdValid($groupId))
             return $this->error("groupId must be an integer");
 
@@ -369,31 +369,19 @@ class OpenM_GroupsImpl extends OpenM_BookCommonsImpl implements OpenM_Groups {
         $groups = $groupContentGroupDAO->getChilds($groupId);
         if ($groups == null) {
             $list = new HashtableString();
-            return $this->ok()->put(self::RETURN_GROUP_LIST_PARAMETER, $list);
+            $return = $this->ok()->put(self::RETURN_GROUP_LIST_PARAMETER, $list);
         }
-        return $this->ok()->put(self::RETURN_GROUP_LIST_PARAMETER, $this->getGroups($groups));
-    }
-
-    public function getUsersFromGroup($groupId) {
-        if (!OpenM_Book_Tool::isGroupIdValid($groupId))
-            return $this->error("groupId must be an integer");
-
-        if (!$this->isUserRegistered())
-            return $this->error;
         else
-            $user = $this->user;
-
-        $groupContentGroupDAO = new OpenM_Book_Group_Content_GroupDAO();
-        if (!$groupContentGroupDAO->isDescendant($groupId, $user->get(OpenM_Book_UserDAO::PERSONAL_GROUPS)))
-            return $this->error(self::RETURN_ERROR_MESSAGE_NOT_YOUR_PERSONAL_GROUP_VALUE);
+            $return = $this->ok()->put(self::RETURN_GROUP_LIST_PARAMETER, $this->getGroups($groups));
 
         $groupContentUserDAO = new OpenM_Book_Group_Content_UserDAO();
         $users = $groupContentUserDAO->getUsersFromGroup($groupId);
         if ($users == null) {
             $list = new HashtableString();
-            return $this->ok()->put(self::RETURN_USER_LIST_PARAMETER, $list);
+            return $return->put(self::RETURN_USER_LIST_PARAMETER, $list);
         }
-        return $this->ok()->put(self::RETURN_USER_LIST_PARAMETER, $this->getUsers($users));
+        else
+            return $return->put(self::RETURN_USER_LIST_PARAMETER, $this->getUsers($users));
     }
 
     private function isGroupNameValid($name) {
