@@ -528,9 +528,8 @@ class OpenM_BookImpl extends OpenM_BookCommonsImpl implements OpenM_Book {
             return $this->error;
 
         $adminDAO = new OpenM_Book_AdminDAO();
-        $isUserAdmin = false;
+        $isUserAdmin = ($adminDAO->get($this->user->get(OpenM_Book_UserDAO::UID)) != null);    
         if ($this->user->get(OpenM_Book_UserDAO::ID)->toInt() == $userId) {
-            $isUserAdmin = ($adminDAO->get($this->user->get(OpenM_Book_UserDAO::UID)) != null);
             if (!$isUserAdmin)
                 return $this->error("You can't validate yourself");
         }
