@@ -17,8 +17,8 @@ class OpenM_Book_Group_Content_UserDAO extends OpenM_Book_DAO {
 
     public function create($groupId, $userId) {
         self::$db->request(OpenM_DB::insert($this->getTABLE(self::OPENM_BOOK_GROUP_CONTENT_USER_TABLE_NAME), array(
-                    self::GROUP_ID => intval($groupId),
-                    self::USER_ID => intval($userId)
+                    self::GROUP_ID => intval("$groupId"),
+                    self::USER_ID => intval("$userId")
         )));
 
         $return = new HashtableString();
@@ -28,27 +28,27 @@ class OpenM_Book_Group_Content_UserDAO extends OpenM_Book_DAO {
 
     public function delete($groupId, $userId) {
         self::$db->request(OpenM_DB::delete($this->getTABLE(self::OPENM_BOOK_GROUP_CONTENT_USER_TABLE_NAME), array(
-                    self::USER_ID => intval($userId),
-                    self::GROUP_ID => intval($groupId)
+                    self::USER_ID => intval("$userId"),
+                    self::GROUP_ID => intval("$groupId")
         )));
     }
 
     public function deleteFromGroup($groupId) {
         self::$db->request(OpenM_DB::delete($this->getTABLE(self::OPENM_BOOK_GROUP_CONTENT_USER_TABLE_NAME), array(
-                    self::GROUP_ID => intval($groupId)
+                    self::GROUP_ID => intval("$groupId")
         )));
     }
 
     public function deleteFromUser($userId) {
         self::$db->request(OpenM_DB::delete($this->getTABLE(self::OPENM_BOOK_GROUP_CONTENT_USER_TABLE_NAME), array(
-                    self::USER_ID => intval($userId)
+                    self::USER_ID => intval("$userId")
         )));
     }
 
     public function get($groupId, $userId) {
         return self::$db->request_fetch_HashtableString(OpenM_DB::select($this->getTABLE(self::OPENM_BOOK_GROUP_CONTENT_USER_TABLE_NAME), array(
-                            self::USER_ID => intval($userId),
-                            self::GROUP_ID => intval($groupId)
+                            self::USER_ID => intval("$userId"),
+                            self::GROUP_ID => intval("$groupId")
         )));
     }
 
@@ -90,7 +90,7 @@ class OpenM_Book_Group_Content_UserDAO extends OpenM_Book_DAO {
         ));
 
         $communityIds = OpenM_DB::select($this->getTABLE(OpenM_Book_Community_Content_UserDAO::OPENM_BOOK_COMMUNITY_CONTENT_USER_TABLE_NAME), array(
-                    OpenM_Book_Community_Content_UserDAO::USER_ID => intval($userId)
+                    OpenM_Book_Community_Content_UserDAO::USER_ID => intval("$userId")
                         ), array(
                     OpenM_Book_Community_Content_UserDAO::COMMUNITY_ID
                         )
@@ -125,7 +125,7 @@ class OpenM_Book_Group_Content_UserDAO extends OpenM_Book_DAO {
 
     public function getFromGroup($groupId) {
         return self::$db->request_HashtableString(OpenM_DB::select($this->getTABLE(self::OPENM_BOOK_GROUP_CONTENT_USER_TABLE_NAME), array(
-                            self::GROUP_ID => intval($groupId)
+                            self::GROUP_ID => intval("$groupId")
                         )), self::USER_ID);
     }
 
@@ -133,7 +133,7 @@ class OpenM_Book_Group_Content_UserDAO extends OpenM_Book_DAO {
         return self::$db->request_HashtableString(OpenM_DB::select($this->getTABLE(OpenM_Book_UserDAO::OpenM_Book_User_Table_Name))
                         . " WHERE " . OpenM_Book_UserDAO::ID . " IN (" .
                         OpenM_DB::select($this->getTABLE(self::OPENM_BOOK_GROUP_CONTENT_USER_TABLE_NAME), array(
-                            self::GROUP_ID => intval($groupId)
+                            self::GROUP_ID => intval("$groupId")
                                 ), array(self::USER_ID)) . ")"
                         . " AND " . OpenM_Book_UserDAO::ACTIVATED . "=" . OpenM_Book_UserDAO::ACTIVE, self::USER_ID
         );
@@ -141,7 +141,7 @@ class OpenM_Book_Group_Content_UserDAO extends OpenM_Book_DAO {
 
     public function getFromUser($userId) {
         return self::$db->request_HashtableString(OpenM_DB::select($this->getTABLE(self::OPENM_BOOK_GROUP_CONTENT_USER_TABLE_NAME), array(
-                            self::USER_ID => intval($userId)
+                            self::USER_ID => intval("$userId")
                         )), self::GROUP_ID);
     }
 
