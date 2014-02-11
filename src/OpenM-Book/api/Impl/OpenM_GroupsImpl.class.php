@@ -110,20 +110,28 @@ class OpenM_GroupsImpl extends OpenM_BookCommonsImpl implements OpenM_Groups {
         else
             $withAncestors = false;
 
-        if ($userId !== "" && $userId !== null && $userId != $this->user->get(OpenM_Book_UserDAO::ID))
-            return $this->ok();
 
-        $uid = $this->getManager()->getID();
+        if ($userId !== null && $userId !== "" && $userId !== $this->user->get(OpenM_Book_UserDAO::ID)->toInt()) {
+            $userDAO = new OpenM_Book_UserDAO();
+            $user = $userDAO->get($userId);
+            if ($user === null)
+                return $this->error("user not found");
+        }
+        else
+            $userId = $this->user->get(OpenM_Book_UserDAO::ID);
+
         OpenM_Log::debug("search my communities in DAO", __CLASS__, __METHOD__, __LINE__);
         $groupContentUserDAO = new OpenM_Book_Group_Content_UserDAO();
-        $communities = $groupContentUserDAO->getCommunitiesFromUID($uid, false, true);
+        $communities = $groupContentUserDAO->getCommunitiesFromId($userId, $this->user->get(OpenM_Book_UserDAO::ID));
         OpenM_Log::debug("translate communities to return format", __CLASS__, __METHOD__, __LINE__);
         $r = $this->getGroups($communities, false);
         $return = $this->ok()->put(self::RETURN_GROUP_LIST_PARAMETER, $r);
+
         OpenM_Log::debug("check if withAncestor is activated", __CLASS__, __METHOD__, __LINE__);
         if ($withAncestors) {
             OpenM_Log::debug("withAncestor is activated", __CLASS__, __METHOD__, __LINE__);
-            $ancestors = $groupContentUserDAO->getMyCommunitiesAncestors($this->user->get(OpenM_Book_UserDAO::ID)->toInt());
+            $ancestors = $groupContentUserDAO->getCommunitiesAncestors($communities);
+            OpenM_Log::debug("Ancestor found in DAO", __CLASS__, __METHOD__, __LINE__);
             $e = $ancestors->keys();
             $a = new HashtableString();
             $return->put(self::RETURN_COMMUNITY_ANCESTORS_LIST, $a);
