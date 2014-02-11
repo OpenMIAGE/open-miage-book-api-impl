@@ -192,6 +192,7 @@ class OpenM_Book_Group_Content_UserDAO extends OpenM_Book_DAO {
                 . " WHERE g." . OpenM_Book_GroupDAO::ID . "=c." . OpenM_Book_Community_Content_UserDAO::COMMUNITY_ID
                 . " AND c." . OpenM_Book_Community_Content_UserDAO::USER_ID . " = $userId"
                 . " AND g." . OpenM_Book_GroupDAO::TYPE . " = " . OpenM_Book_GroupDAO::TYPE_COMMUNITY
+                . " AND v." . OpenM_Book_Community_VisibilityDAO::USER_ID . "=$userId"
                 . " AND v." . OpenM_Book_Community_VisibilityDAO::COMMUNITY_ID . "=c." . OpenM_Book_Community_Content_UserDAO::COMMUNITY_ID
                 . " AND v." . OpenM_Book_Community_VisibilityDAO::VISIBILITY_ID . " IN ("
                 . OpenM_DB::select($this->getTABLE(OpenM_Book_Group_Content_GroupDAO::OPENM_BOOK_GROUP_CONTENT_GROUP_INDEX_TABLE_NAME), array(), array(
