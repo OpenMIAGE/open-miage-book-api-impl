@@ -182,12 +182,24 @@ class OpenM_Book_Group_Content_UserDAO extends OpenM_Book_DAO {
     }
 
     private function _getCommunitiesFromAnotherUserId($userId, $userIdCalling) {
+
+        $groupContentGroupDAO = new OpenM_Book_Group_Content_GroupDAO();
+
         return "SELECT g.*, c." . OpenM_Book_Community_Content_UserDAO::IS_VALIDATED
                 . " FROM " . $this->getTABLE(OpenM_Book_GroupDAO::OpenM_BOOK_GROUP_TABLE_NAME) . " g, "
-                . $this->getTABLE(OpenM_Book_Community_Content_UserDAO::OPENM_BOOK_COMMUNITY_CONTENT_USER_TABLE_NAME) . " c"
+                . $this->getTABLE(OpenM_Book_Community_Content_UserDAO::OPENM_BOOK_COMMUNITY_CONTENT_USER_TABLE_NAME) . " c, "
+                . $this->getTABLE(OpenM_Book_Community_VisibilityDAO::OPENM_BOOK_COMMUNITY_VISIBILITY_TABLE_NAME) . " v"
                 . " WHERE g." . OpenM_Book_GroupDAO::ID . "=c." . OpenM_Book_Community_Content_UserDAO::COMMUNITY_ID
-                . " AND " . OpenM_Book_Community_Content_UserDAO::USER_ID . " = $userId"
-                . " AND " . OpenM_Book_GroupDAO::TYPE . " = " . OpenM_Book_GroupDAO::TYPE_COMMUNITY;
+                . " AND c." . OpenM_Book_Community_Content_UserDAO::USER_ID . " = $userId"
+                . " AND g." . OpenM_Book_GroupDAO::TYPE . " = " . OpenM_Book_GroupDAO::TYPE_COMMUNITY
+                . " AND v." . OpenM_Book_Community_VisibilityDAO::COMMUNITY_ID . "=c." . OpenM_Book_Community_Content_UserDAO::COMMUNITY_ID
+                . " AND v." . OpenM_Book_Community_VisibilityDAO::VISIBILITY_ID . " IN ("
+                . OpenM_DB::select($this->getTABLE(OpenM_Book_Group_Content_GroupDAO::OPENM_BOOK_GROUP_CONTENT_GROUP_INDEX_TABLE_NAME), array(), array(
+                    OpenM_Book_Group_Content_GroupDAO::GROUP_PARENT_ID
+                ))
+                . " WHERE " . OpenM_Book_Group_Content_GroupDAO::GROUP_ID . " IN ("
+                . $groupContentGroupDAO->inGroupsFromUserId($userIdCalling)
+                . "))";
     }
 
     public function getCommunitiesAncestors($communities) {

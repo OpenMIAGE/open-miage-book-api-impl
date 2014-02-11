@@ -136,6 +136,9 @@ class OpenM_Book_Community_Content_UserDAO extends OpenM_Book_DAO {
                     . " AND t." . OpenM_Book_Community_Content_User_ValidationDAO::GROUP_ID . "=c." . self::COMMUNITY_ID
                     . " AND t." . OpenM_Book_Community_Content_User_ValidationDAO::VALIDATED_BY . "=$userId"
                     . ") as " . self::NB_ACCEPTED;
+        
+        $groupContentGroupDAO = new OpenM_Book_Group_Content_GroupDAO();
+        
         $users.= " FROM " . $this->getTABLE(OpenM_Book_UserDAO::OpenM_Book_User_Table_Name) . " u, "
                 . " ($usersIds) c, "
                 . $this->getTABLE(OpenM_Book_Community_VisibilityDAO::OPENM_BOOK_COMMUNITY_VISIBILITY_TABLE_NAME) . " cv"
@@ -147,18 +150,7 @@ class OpenM_Book_Community_Content_UserDAO extends OpenM_Book_DAO {
                 . $this->getTABLE(OpenM_Book_Group_Content_GroupDAO::OPENM_BOOK_GROUP_CONTENT_GROUP_INDEX_TABLE_NAME)
                 . " WHERE " . OpenM_Book_Group_Content_GroupDAO::GROUP_PARENT_ID . "=cv." . OpenM_Book_Community_VisibilityDAO::VISIBILITY_ID
                 . " AND (" . OpenM_Book_Group_Content_GroupDAO::GROUP_ID . " IN ("
-                . OpenM_DB::select($this->getTABLE(OpenM_Book_Community_Content_UserDAO::OPENM_BOOK_COMMUNITY_CONTENT_USER_TABLE_NAME), array(
-                    OpenM_Book_Community_Content_UserDAO::USER_ID => intval("$myId"),
-                    OpenM_Book_Community_Content_UserDAO::IS_VALIDATED => OpenM_Book_Community_Content_UserDAO::VALIDATED
-                        ), array(
-                    OpenM_Book_Community_Content_UserDAO::COMMUNITY_ID
-                ))
-                . " UNION "
-                . OpenM_DB::select($this->getTABLE(OpenM_Book_Group_Content_UserDAO::OPENM_BOOK_GROUP_CONTENT_USER_TABLE_NAME), array(
-                    OpenM_Book_Group_Content_UserDAO::USER_ID => intval("$myId")
-                        ), array(
-                    OpenM_Book_Group_Content_UserDAO::GROUP_ID
-                ))
+                . $groupContentGroupDAO->inGroupsFromUserId($myId)
                 . ")"
                 . "))>0"
                 . ($valid ? (" GROUP BY " . OpenM_Book_UserDAO::ID) : "");
