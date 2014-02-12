@@ -467,7 +467,7 @@ class OpenM_BookImpl extends OpenM_BookCommonsImpl implements OpenM_Book {
             }
         }
 
-        OpenM_Log::debug("search users valid in DAO", __CLASS__, __METHOD__, __LINE__);
+        OpenM_Log::debug("search users not valid in DAO", __CLASS__, __METHOD__, __LINE__);
         $communityContentUserDAO = new OpenM_Book_Community_Content_UserDAO();
         $users = $communityContentUserDAO->getUsers($this->user->get(OpenM_Book_UserDAO::ID)->toInt(), $communityId, $start, $numberOfResult, false, $this->user->get(OpenM_Book_UserDAO::ID)->toInt());
         $userList = new HashtableString();

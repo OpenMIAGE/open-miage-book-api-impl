@@ -113,63 +113,58 @@ class OpenM_Book_Community_Content_UserDAO extends OpenM_Book_DAO {
     }
 
     public function getUsers($myId, $communityId, $start, $maxNbResult, $valid = true, $userId = null) {
-        $communityId = intval($communityId);
-        $communities = OpenM_DB::select($this->getTABLE(OpenM_Book_Group_Content_GroupDAO::OPENM_BOOK_GROUP_CONTENT_GROUP_INDEX_TABLE_NAME), array(
-                    OpenM_Book_Group_Content_GroupDAO::GROUP_PARENT_ID => $communityId
-                        ), array(
-                    OpenM_Book_Group_Content_GroupDAO::GROUP_ID
-        ));
-        $usersIds = "SELECT cc.* " . (!$valid ? ", g." . OpenM_Book_GroupDAO::NAME : "") . " FROM "
-                . $this->getTABLE(self::OPENM_BOOK_COMMUNITY_CONTENT_USER_TABLE_NAME) . " cc"
-                . ((!$valid) ? (", " . $this->getTABLE(OpenM_Book_GroupDAO::OpenM_BOOK_GROUP_TABLE_NAME) . " g ") : "")
-                . " WHERE (cc." . self::COMMUNITY_ID . " IN ($communities) OR cc." . self::COMMUNITY_ID . "=$communityId)"
-                . " AND cc." . self::IS_VALIDATED . "=" . (($valid) ? (self::VALIDATED) : (self::NOT_VALIDATED))
-                . ((!$valid) ? (" AND cc." . self::COMMUNITY_ID . "=g." . OpenM_Book_GroupDAO::ID) : "");
-        $users_head = "SELECT u." . OpenM_Book_UserDAO::ID . ", u."
+
+        $communityId = intval("$communityId");
+
+        $select = "SELECT u." . OpenM_Book_UserDAO::ID . ", u."
                 . OpenM_Book_UserDAO::FIRST_NAME . ", u." . OpenM_Book_UserDAO::LAST_NAME
-                . ", c." . self::COMMUNITY_ID . ((!$valid) ? (", c." . OpenM_Book_GroupDAO::NAME ) : "");
-        $users = $users_head;
+                . ", c." . self::COMMUNITY_ID . ", g." . OpenM_Book_GroupDAO::NAME;
+
         if ($userId !== null)
-            $users .= ", (SELECT count(*) "
-                    . "FROM " . $this->getTABLE(OpenM_Book_Community_Content_User_ValidationDAO::OPENM_BOOK_COMMUNITY_CONTENT_USER_VALIDATION_TABLE_NAME) . " t"
+            $select .= ", (SELECT count(*)"
+                    . " FROM " . $this->getTABLE(OpenM_Book_Community_Content_User_ValidationDAO::OPENM_BOOK_COMMUNITY_CONTENT_USER_VALIDATION_TABLE_NAME) . " t"
                     . " WHERE t." . OpenM_Book_Community_Content_User_ValidationDAO::USER_ID . "=u." . OpenM_Book_UserDAO::ID
                     . " AND t." . OpenM_Book_Community_Content_User_ValidationDAO::GROUP_ID . "=c." . self::COMMUNITY_ID
                     . " AND t." . OpenM_Book_Community_Content_User_ValidationDAO::VALIDATED_BY . "=$userId"
                     . ") as " . self::NB_ACCEPTED;
-        
+
+
+        $from = " FROM " . $this->getTABLE(OpenM_Book_UserDAO::OpenM_Book_User_Table_Name) . " u,"
+                . $this->getTABLE(OpenM_Book_GroupDAO::OpenM_BOOK_GROUP_TABLE_NAME) . " g,"
+                . $this->getTABLE(self::OPENM_BOOK_COMMUNITY_CONTENT_USER_TABLE_NAME) . " c,"
+                . $this->getTABLE(OpenM_Book_Community_VisibilityDAO::OPENM_BOOK_COMMUNITY_VISIBILITY_TABLE_NAME) . " v";
+
         $groupContentGroupDAO = new OpenM_Book_Group_Content_GroupDAO();
-        
-        $users.= " FROM " . $this->getTABLE(OpenM_Book_UserDAO::OpenM_Book_User_Table_Name) . " u, "
-                . " ($usersIds) c, "
-                . $this->getTABLE(OpenM_Book_Community_VisibilityDAO::OPENM_BOOK_COMMUNITY_VISIBILITY_TABLE_NAME) . " cv"
-                . " WHERE u." . OpenM_Book_UserDAO::ID . "=c." . self::USER_ID
-                . " AND u." . OpenM_Book_UserDAO::ACTIVATED . "=" . OpenM_Book_UserDAO::ACTIVE
-                . " AND u." . OpenM_Book_UserDAO::ID . "=cv." . OpenM_Book_Community_VisibilityDAO::USER_ID
-                . " AND c." . self::COMMUNITY_ID . "=cv." . OpenM_Book_Community_VisibilityDAO::COMMUNITY_ID
-                . " AND (SELECT count(*) FROM "
-                . $this->getTABLE(OpenM_Book_Group_Content_GroupDAO::OPENM_BOOK_GROUP_CONTENT_GROUP_INDEX_TABLE_NAME)
-                . " WHERE " . OpenM_Book_Group_Content_GroupDAO::GROUP_PARENT_ID . "=cv." . OpenM_Book_Community_VisibilityDAO::VISIBILITY_ID
-                . " AND (" . OpenM_Book_Group_Content_GroupDAO::GROUP_ID . " IN ("
+
+        $where = " WHERE u." . OpenM_Book_UserDAO::ID . "=c." . self::USER_ID
+                . " AND c." . self::COMMUNITY_ID . "=g." . OpenM_Book_GroupDAO::ID
+                . " AND (g." . OpenM_Book_GroupDAO::ID . " IN ("
+                . OpenM_DB::select($this->getTABLE(OpenM_Book_Group_Content_GroupDAO::OPENM_BOOK_GROUP_CONTENT_GROUP_INDEX_TABLE_NAME), array(
+                    OpenM_Book_Group_Content_GroupDAO::GROUP_PARENT_ID => $communityId
+                        ), array(
+                    OpenM_Book_Group_Content_GroupDAO::GROUP_ID
+                ))
+                . ")"
+                . " OR g." . OpenM_Book_GroupDAO::ID . "=$communityId)"
+                . " AND u." . OpenM_Book_UserDAO::ID . "=v." . OpenM_Book_Community_VisibilityDAO::USER_ID
+                . " AND c." . self::COMMUNITY_ID . "=v." . OpenM_Book_Community_VisibilityDAO::COMMUNITY_ID
+                . " AND c." . self::IS_VALIDATED . "=" . (($valid) ? self::VALIDATED : self::NOT_VALIDATED)
+                . " AND (v." . OpenM_Book_Community_VisibilityDAO::VISIBILITY_ID . " IN ("
+                . $groupContentGroupDAO->inGroupsFromUserId($myId)
+                . ") OR v." . OpenM_Book_Community_VisibilityDAO::VISIBILITY_ID . " IN ("
+                . OpenM_DB::select($this->getTABLE(OpenM_Book_Group_Content_GroupDAO::OPENM_BOOK_GROUP_CONTENT_GROUP_INDEX_TABLE_NAME), array(), array(
+                    OpenM_Book_Group_Content_GroupDAO::GROUP_PARENT_ID
+                )) . " WHERE " . OpenM_Book_Group_Content_GroupDAO::GROUP_ID . " IN ("
                 . $groupContentGroupDAO->inGroupsFromUserId($myId)
                 . ")"
-                . "))>0"
-                . ($valid ? (" GROUP BY " . OpenM_Book_UserDAO::ID) : "");
+                . "))";
+
         $orderBy = " ORDER BY u." . OpenM_Book_UserDAO::FIRST_NAME . ", u." . OpenM_Book_UserDAO::LAST_NAME;
-        $users .= $orderBy;
-        if (!$valid)
-            $users = "($users) UNION "
-                    . "(" . $users_head . (($userId !== null) ? (", 0 " . self::NB_ACCEPTED) : "")
-                    . " FROM " . $this->getTABLE(OpenM_Book_UserDAO::OpenM_Book_User_Table_Name) . " u, "
-                    . $this->getTABLE(OpenM_Book_GroupDAO::OpenM_BOOK_GROUP_TABLE_NAME) . " c, "
-                    . $this->getTABLE(OpenM_Book_Community_Content_UserDAO::OPENM_BOOK_COMMUNITY_CONTENT_USER_TABLE_NAME) . " cu"
-                    . " WHERE u." . OpenM_Book_UserDAO::ID . "=$myId"
-                    . " AND u." . OpenM_Book_UserDAO::ID . "=cu." . OpenM_Book_Community_Content_UserDAO::USER_ID
-                    . " AND c." . OpenM_Book_GroupDAO::ID . "=cu." . OpenM_Book_Community_Content_UserDAO::COMMUNITY_ID
-                    . " AND cu." . OpenM_Book_Community_Content_UserDAO::IS_VALIDATED . "=" . OpenM_Book_Community_Content_UserDAO::NOT_VALIDATED
-                    . " AND (cu." . OpenM_Book_Community_Content_UserDAO::COMMUNITY_ID . " IN ($communities)"
-                    . " OR cu." . OpenM_Book_Community_Content_UserDAO::COMMUNITY_ID . "=$communityId)"
-                    . "$orderBy)";
-        return self::$db->request_ArrayList(self::$db->limit($users, $maxNbResult, $start));
+
+        return self::$db->request_ArrayList(self::$db->limit($select
+                                . $from
+                                . $where
+                                . $orderBy, $maxNbResult, $start));
     }
 
 }
