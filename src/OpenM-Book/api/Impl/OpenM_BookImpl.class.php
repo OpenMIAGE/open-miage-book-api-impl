@@ -512,7 +512,7 @@ class OpenM_BookImpl extends OpenM_BookCommonsImpl implements OpenM_Book {
         if ($groupVisibility !== null) {
             OpenM_Log::debug("remove visibility group", __CLASS__, __METHOD__, __LINE__);
             $groupDAO = new OpenM_Book_GroupDAO();
-            $groupDAO->delete($groupVisibility->get(OpenM_Book_Community_VisibilityDAO::COMMUNITY_ID));
+            $groupDAO->delete($groupVisibility->get(OpenM_Book_Community_VisibilityDAO::VISIBILITY_ID));
             $groupVisibilityDAO->delete($this->user->get(OpenM_Book_UserDAO::ID)->toInt(), $communityId);
         }
         return $this->ok();
