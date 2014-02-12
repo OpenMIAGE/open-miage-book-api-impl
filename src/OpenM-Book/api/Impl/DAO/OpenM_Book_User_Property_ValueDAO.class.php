@@ -47,7 +47,7 @@ class OpenM_Book_User_Property_ValueDAO extends OpenM_Book_DAO {
 
     public function delete($propertyValueId) {
         self::$db->request(OpenM_DB::delete($this->getTABLE(self::OPENM_BOOK_USER_PROPERTY_VALUE_TABLE_NAME), array(
-                    self::ID => intval($propertyValueId)
+                    self::ID => intval("$propertyValueId")
         )));
 
         //todo : remove visibility of property
@@ -60,7 +60,7 @@ class OpenM_Book_User_Property_ValueDAO extends OpenM_Book_DAO {
      */
     public function get($propertyValueId) {
         return self::$db->request_fetch_HashtableString(OpenM_DB::select($this->getTABLE(self::OPENM_BOOK_USER_PROPERTY_VALUE_TABLE_NAME), array(
-                            self::ID => intval($propertyValueId)
+                            self::ID => intval("$propertyValueId")
         )));
     }
 

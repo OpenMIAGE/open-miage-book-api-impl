@@ -25,8 +25,8 @@ class OpenM_Book_Community_Content_UserDAO extends OpenM_Book_DAO {
         $time = time();
 
         $array = array(
-            self::COMMUNITY_ID => intval($communityId),
-            self::USER_ID => intval($userId),
+            self::COMMUNITY_ID => intval("$communityId"),
+            self::USER_ID => intval("$userId"),
             self::IS_VALIDATED => (($isValid) ? 1 : 0),
             self::CREATION_TIME => $time
         );
@@ -55,46 +55,47 @@ class OpenM_Book_Community_Content_UserDAO extends OpenM_Book_DAO {
             $array[self::VALIDATION_TIME] = $time;
 
         self::$db->request(OpenM_DB::update($this->getTABLE(self::OPENM_BOOK_COMMUNITY_CONTENT_USER_TABLE_NAME), $array, array(
-                    self::COMMUNITY_ID => $communityId,
-                    self::USER_ID => $userId
+                    self::COMMUNITY_ID => intval("$communityId"),
+                    self::USER_ID => intval("$userId"),
         )));
     }
 
     public function delete($communityId, $userId) {
         self::$db->request(OpenM_DB::delete($this->getTABLE(self::OPENM_BOOK_COMMUNITY_CONTENT_USER_TABLE_NAME), array(
-                    self::USER_ID => intval($userId),
-                    self::COMMUNITY_ID => intval($communityId)
+                    self::USER_ID => intval("$userId"),
+                    self::COMMUNITY_ID => intval("$communityId")
         )));
     }
 
     public function deleteFromCommunity($communityId) {
         self::$db->request(OpenM_DB::delete($this->getTABLE(self::OPENM_BOOK_COMMUNITY_CONTENT_USER_TABLE_NAME), array(
-                    self::COMMUNITY_ID => intval($communityId)
+                    self::COMMUNITY_ID => intval("$communityId")
         )));
     }
 
     public function deleteFromUser($userId) {
         self::$db->request(OpenM_DB::delete($this->getTABLE(self::OPENM_BOOK_COMMUNITY_CONTENT_USER_TABLE_NAME), array(
-                    self::USER_ID => intval($userId)
+                    self::USER_ID => intval("$userId")
         )));
     }
 
     public function get($groupId, $userId) {
         return self::$db->request_fetch_HashtableString(OpenM_DB::select($this->getTABLE(self::OPENM_BOOK_COMMUNITY_CONTENT_USER_TABLE_NAME), array(
                             self::USER_ID => intval($userId),
-                            self::COMMUNITY_ID => intval($groupId)
+                            self::COMMUNITY_ID => intval("$groupId")
         )));
     }
 
     public function countOfUsers($communityId, $valid = true) {
         $communities = OpenM_DB::select($this->getTABLE(OpenM_Book_Group_Content_GroupDAO::OPENM_BOOK_GROUP_CONTENT_GROUP_INDEX_TABLE_NAME), array(
-                    OpenM_Book_Group_Content_GroupDAO::GROUP_PARENT_ID => intval($communityId)
+                    OpenM_Book_Group_Content_GroupDAO::GROUP_PARENT_ID => intval("$communityId")
                         ), array(
                     OpenM_Book_Group_Content_GroupDAO::GROUP_ID
         ));
         $count = self::$db->request_fetch_array("SELECT count(*) as count FROM "
                 . $this->getTABLE(self::OPENM_BOOK_COMMUNITY_CONTENT_USER_TABLE_NAME)
-                . " WHERE (" . self::COMMUNITY_ID . " IN ($communities) OR " . self::COMMUNITY_ID . "=$communityId)"
+                . " WHERE (" . self::COMMUNITY_ID . " IN ($communities)"
+                . " OR " . self::COMMUNITY_ID . "=$communityId)"
                 . " AND " . self::IS_VALIDATED . "=" . (($valid) ? (self::VALIDATED) : (self::NOT_VALIDATED))
         );
         return intval($count["count"]);
@@ -102,13 +103,13 @@ class OpenM_Book_Community_Content_UserDAO extends OpenM_Book_DAO {
 
     public function getFromCommunity($groupId) {
         return self::$db->request_HashtableString(OpenM_DB::select($this->getTABLE(self::OPENM_BOOK_COMMUNITY_CONTENT_USER_TABLE_NAME), array(
-                            self::COMMUNITY_ID => intval($groupId)
+                            self::COMMUNITY_ID => intval("$groupId")
                         )), self::USER_ID);
     }
 
     public function getFromUser($userId) {
         return self::$db->request_HashtableString(OpenM_DB::select($this->getTABLE(self::OPENM_BOOK_COMMUNITY_CONTENT_USER_TABLE_NAME), array(
-                            self::USER_ID => intval($userId)
+                            self::USER_ID => intval("$userId")
                         )), self::COMMUNITY_ID);
     }
 

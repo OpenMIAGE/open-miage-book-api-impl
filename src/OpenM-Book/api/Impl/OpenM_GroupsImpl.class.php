@@ -309,7 +309,7 @@ class OpenM_GroupsImpl extends OpenM_BookCommonsImpl implements OpenM_Groups {
             return $this->error(self::RETURN_ERROR_MESSAGE_GROUP_NOT_FOUND_VALUE);
         OpenM_Log::debug("unindex group name", __CLASS__, __METHOD__, __LINE__);
         $searchDAO = new OpenM_Book_SearchDAO();
-        $searchDAO->unIndex($group->get(OpenM_Book_GroupDAO::NAME), $group->get(OpenM_Book_GroupDAO::ID), OpenM_Book_SearchDAO::TYPE_PERSONAL_GROUP, $this->user->get(OpenM_Book_UserDAO::ID));
+        $searchDAO->unIndex($group->get(OpenM_Book_GroupDAO::ID), OpenM_Book_SearchDAO::TYPE_PERSONAL_GROUP);
         OpenM_Log::debug("update name in DAO", __CLASS__, __METHOD__, __LINE__);
         $groupDAO->update($groupId, $groupName);
         OpenM_Log::debug("index new name of group", __CLASS__, __METHOD__, __LINE__);

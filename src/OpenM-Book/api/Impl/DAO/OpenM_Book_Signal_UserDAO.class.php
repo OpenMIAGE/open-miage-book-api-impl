@@ -25,13 +25,13 @@ class OpenM_Book_Signal_UserDAO extends OpenM_Book_DAO {
     public function create($userId, $signaledBy, $message, $groupId = null) {
         $time = time();
         $array = array(
-            self::USER_ID => intval($userId),
-            self::SIGNALED_BY => intval($signaledBy),
+            self::USER_ID => intval("$userId"),
+            self::SIGNALED_BY => intval("$signaledBy"),
             self::MESSAGE => self::$db->escape($message),
-            self::TIME => intval($time)
+            self::TIME => $time
         );
         if ($groupId != null)
-            $array[self::GROUP_ID] = intval($groupId);
+            $array[self::GROUP_ID] = intval("$groupId");
         self::$db->request(OpenM_DB::insert($this->getTABLE(self::OpenM_BOOK_SIGNAL_USER_Table_Name), $array));
         $return = new HashtableString();
         return $return->put(self::USER_ID, $userId)
@@ -39,17 +39,6 @@ class OpenM_Book_Signal_UserDAO extends OpenM_Book_DAO {
                         ->put(self::SIGNALED_BY, $signaledBy)
                         ->put(self::MESSAGE, $message)
                         ->put(self::TIME, $time);
-    }
-
-    /**
-     * @return HashtableString
-     * @todo 
-     */
-    public function getFromTypeAndGroups($type, $groups) {
-
-        return self::$db->request_HashtableString(OpenM_DB::select($this->getTABLE(self::OpenM_BOOK_SIGNAL_USER_Table_Name), array(
-                            self::USER_ID => $uid
-                        )));
     }
 
 }

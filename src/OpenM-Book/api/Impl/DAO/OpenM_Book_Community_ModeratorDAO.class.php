@@ -26,8 +26,8 @@ class OpenM_Book_Community_ModeratorDAO extends OpenM_Book_DAO {
      */
     public function create($communityId, $groupModeratorId) {
         self::$db->request(OpenM_DB::insert($this->getTABLE(self::OPENM_BOOK_COMMUNITY_MODERATOR_TABLE_NAME), array(
-                    self::COMMUNITY_ID => intval($communityId),
-                    self::MODERATOR_ID => intval($groupModeratorId)
+                    self::COMMUNITY_ID => intval("$communityId"),
+                    self::MODERATOR_ID => intval("$groupModeratorId")
                 )));
 
         $return = new HashtableString();
@@ -37,45 +37,45 @@ class OpenM_Book_Community_ModeratorDAO extends OpenM_Book_DAO {
 
     public function delete($communityId, $groupModeratorId) {
         self::$db->request(OpenM_DB::delete($this->getTABLE(self::OPENM_BOOK_COMMUNITY_MODERATOR_TABLE_NAME), array(
-                    self::COMMUNITY_ID => intval($communityId),
-                    self::MODERATOR_ID => intval($groupModeratorId)
+                    self::COMMUNITY_ID => intval("$communityId"),
+                    self::MODERATOR_ID => intval("$groupModeratorId")
                 )));
     }
 
     public function deleteFromCommunity($communityId) {
         self::$db->request(OpenM_DB::delete($this->getTABLE(self::OPENM_BOOK_COMMUNITY_MODERATOR_TABLE_NAME), array(
-                    self::COMMUNITY_ID => intval($communityId)
+                    self::COMMUNITY_ID => intval("$communityId")
                 )));
     }
 
     public function deleteFromModerator($groupModeratorId) {
         self::$db->request(OpenM_DB::delete($this->getTABLE(self::OPENM_BOOK_COMMUNITY_MODERATOR_TABLE_NAME), array(
-                    self::MODERATOR_ID => intval($groupModeratorId)
+                    self::MODERATOR_ID => intval("$groupModeratorId")
                 )));
     }
 
     public function get($communityId, $groupModeratorId) {
         return self::$db->request_fetch_HashtableString(OpenM_DB::select($this->getTABLE(self::OPENM_BOOK_COMMUNITY_MODERATOR_TABLE_NAME), array(
-                            self::COMMUNITY_ID => intval($communityId),
-                            self::MODERATOR_ID => intval($groupModeratorId)
+                            self::COMMUNITY_ID => intval("$communityId"),
+                            self::MODERATOR_ID => intval("$groupModeratorId")
                         )));
     }
 
     public function getFromCommunity($communityId) {
         return self::$db->request_fetch_HashtableString(OpenM_DB::select($this->getTABLE(self::OPENM_BOOK_COMMUNITY_MODERATOR_TABLE_NAME), array(
-                            self::COMMUNITY_ID => intval($communityId)
+                            self::COMMUNITY_ID => intval("$communityId")
                         )));
     }
 
     public function getFromModerator($groupModeratorId) {
         self::$db->request_fetch_HashtableString(OpenM_DB::select($this->getTABLE(self::OPENM_BOOK_COMMUNITY_MODERATOR_TABLE_NAME), array(
-                    self::MODERATOR_ID => intval($groupModeratorId)
+                    self::MODERATOR_ID => intval("$groupModeratorId")
                 )));
     }
 
     public function isUserModerator($userId, $communityId) {
         $scope = OpenM_DB::select($this->getTABLE(OpenM_Book_Group_Content_UserDAO::OPENM_BOOK_GROUP_CONTENT_USER_TABLE_NAME), array(
-                    OpenM_Book_Group_Content_UserDAO::USER_ID => intval($userId)
+                    OpenM_Book_Group_Content_UserDAO::USER_ID => intval("$userId")
                         ), array(
                     OpenM_Book_Group_Content_UserDAO::GROUP_ID
                 ));
@@ -85,7 +85,7 @@ class OpenM_Book_Community_ModeratorDAO extends OpenM_Book_DAO {
                 . " IN (" . $scope . ")";
 
         $moderatorId = "(" . OpenM_DB::select($this->getTABLE(self::OPENM_BOOK_COMMUNITY_MODERATOR_TABLE_NAME), array(
-                    self::COMMUNITY_ID => intval($communityId)
+                    self::COMMUNITY_ID => intval("$communityId")
                         ), array(
                     self::MODERATOR_ID
                 )) . ")";

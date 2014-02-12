@@ -29,10 +29,10 @@ class OpenM_Book_Community_PeriodDAO extends OpenM_Book_DAO {
         $id = $this->sequence->next();
         self::$db->request(OpenM_DB::insert($this->getTABLE(self::OPENM_BOOK_COMMUNITY_PERIOD_TABLE_NAME), array(
                     self::ID => $id,
-                    self::GROUP_ID => intval($groupId),
-                    self::USER_ID => intval($userId),
-                    self::START => intval($start),
-                    self::END => intval($end)
+                    self::GROUP_ID => intval("$groupId"),
+                    self::USER_ID => intval("$userId"),
+                    self::START => intval("$start"),
+                    self::END => intval("$end")
                 )));
 
         $return = new HashtableString();
@@ -45,20 +45,20 @@ class OpenM_Book_Community_PeriodDAO extends OpenM_Book_DAO {
 
     public function delete($periodId) {
         self::$db->request(OpenM_DB::delete($this->getTABLE(self::OPENM_BOOK_COMMUNITY_PERIOD_TABLE_NAME), array(
-                    self::ID => intval($periodId)
+                    self::ID => intval("$periodId")
                 )));
     }
 
     public function deleteFromCommunity($groupId) {
         self::$db->request(OpenM_DB::delete($this->getTABLE(self::OPENM_BOOK_COMMUNITY_PERIOD_TABLE_NAME), array(
-                    self::GROUP_ID => intval($groupId)
+                    self::GROUP_ID => intval("$groupId")
                 )));
     }
 
     public function get($groupId, $userId) {
         return self::$db->request_HashtableString(OpenM_DB::select($this->getTABLE(self::OPENM_BOOK_COMMUNITY_PERIOD_TABLE_NAME), array(
-                            self::GROUP_ID => intval($groupId),
-                            self::USER_ID => intval($userId)
+                            self::GROUP_ID => intval("$groupId"),
+                            self::USER_ID => intval("$userId")
                         )));
     }
 

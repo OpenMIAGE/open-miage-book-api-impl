@@ -23,8 +23,8 @@ class OpenM_Book_Community_Banned_UsersDAO extends OpenM_Book_DAO {
      */
     public function create($communityId, $bannedGroupId) {
         self::$db->request(OpenM_DB::insert($this->getTABLE(self::OPENM_BOOK_COMMUNITY_USER_BAN_TABLE_NAME), array(
-                    self::COMMUNITY_ID => intval($communityId),
-                    self::BANNED_GROUP_ID => intval($bannedGroupId)
+                    self::COMMUNITY_ID => intval("$communityId"),
+                    self::BANNED_GROUP_ID => intval("$bannedGroupId")
                 )));
 
         $return = new HashtableString();
@@ -34,39 +34,39 @@ class OpenM_Book_Community_Banned_UsersDAO extends OpenM_Book_DAO {
 
     public function delete($communityID, $bannedGroupId) {
         $array = array(
-            self::COMMUNITY_ID => intval($communityID),
+            self::COMMUNITY_ID => intval("$communityID"),
         );
         if ($bannedGroupId != null)
             $array[self::BANNED_GROUP_ID] = $bannedGroupId;
 
         self::$db->request(OpenM_DB::delete($this->getTABLE(self::OPENM_BOOK_COMMUNITY_USER_BAN_TABLE_NAME), array(
-                    self::COMMUNITY_ID => intval($communityID),
-                    self::BANNED_GROUP_ID => $bannedGroupId
+                    self::COMMUNITY_ID => intval("$communityID"),
+                    self::BANNED_GROUP_ID =>  intval("$bannedGroupId")
                 ))
         );
     }
 
     public function deleteFromCommunity($communityId) {
         self::$db->request(OpenM_DB::delete($this->getTABLE(self::OPENM_BOOK_COMMUNITY_USER_BAN_TABLE_NAME), array(
-                    self::COMMUNITY_ID => intval($communityId)
+                    self::COMMUNITY_ID => intval("$communityId")
                 )));
     }
 
     public function getFromCommunity($communityId) {
         return self::$db->request_fetch_HashtableString(OpenM_DB::select($this->getTABLE(self::OPENM_BOOK_COMMUNITY_USER_BAN_TABLE_NAME), array(
-                            self::COMMUNITY_ID => intval($communityId)
+                            self::COMMUNITY_ID => intval("$communityId")
                         )));
     }
 
     public function getFromBannedGroup($bannedGroupId) {
         return self::$db->request_fetch_HashtableString(OpenM_DB::select($this->getTABLE(self::OPENM_BOOK_COMMUNITY_USER_BAN_TABLE_NAME), array(
-                            self::BANNED_GROUP_ID => intval($bannedGroupId)
+                            self::BANNED_GROUP_ID => intval("$bannedGroupId")
                         )));
     }
 
     public function isUserBanned($userId, $communityId) {
         $scope = OpenM_DB::select($this->getTABLE(OpenM_Book_Group_Content_UserDAO::OPENM_BOOK_GROUP_CONTENT_USER_TABLE_NAME), array(
-                    OpenM_Book_Group_Content_UserDAO::USER_ID => intval($userId)
+                    OpenM_Book_Group_Content_UserDAO::USER_ID => intval("$userId")
                         ), array(
                     OpenM_Book_Group_Content_UserDAO::GROUP_ID
                 ));
@@ -76,7 +76,7 @@ class OpenM_Book_Community_Banned_UsersDAO extends OpenM_Book_DAO {
                 . " IN (" . $scope . ")";
 
         $bannedGroupId = "(" . OpenM_DB::select($this->getTABLE(self::OPENM_BOOK_COMMUNITY_USER_BAN_TABLE_NAME), array(
-                    self::COMMUNITY_ID => intval($communityId)
+                    self::COMMUNITY_ID => intval("$communityId")
                         ), array(
                     self::BANNED_GROUP_ID
                 )) . ")";

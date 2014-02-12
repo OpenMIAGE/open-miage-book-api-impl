@@ -120,7 +120,7 @@ class OpenM_Book_ModeratorImpl extends OpenM_BookCommonsImpl implements OpenM_Bo
 
         OpenM_Log::debug("unindex old name of community", __CLASS__, __METHOD__, __LINE__);
         $groupSearchDAO = new OpenM_Book_SearchDAO();
-        $groupSearchDAO->unIndex($community->get(OpenM_Book_GroupDAO::NAME), $communityId, OpenM_Book_SearchDAO::TYPE_GENERIC_GROUP);
+        $groupSearchDAO->unIndex($communityId, OpenM_Book_SearchDAO::TYPE_GENERIC_GROUP);
 
         OpenM_Log::debug("update name of community", __CLASS__, __METHOD__, __LINE__);
         $groupDAO->update($communityId, $newName);

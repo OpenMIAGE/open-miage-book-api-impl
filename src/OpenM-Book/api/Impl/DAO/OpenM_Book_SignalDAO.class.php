@@ -25,10 +25,10 @@ class OpenM_Book_SignalDAO extends OpenM_Book_DAO {
         $time = time();
         self::$db->request(OpenM_DB::insert($this->getTABLE(self::OpenM_BOOK_SIGNAL_Table_Name), array(
                     self::TYPE => $type,
-                    self::USER_ID => intval($userId),
+                    self::USER_ID => intval("$userId"),
                     self::URI => $uri,
                     self::MESSAGE => self::$db->escape($message),
-                    self::TIME => intval($time)
+                    self::TIME => $time
                 )));
         $return = new HashtableString();
         return $return->put(self::USER_ID, $userId)
