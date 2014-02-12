@@ -152,8 +152,7 @@ class OpenM_BookImpl extends OpenM_BookCommonsImpl implements OpenM_Book {
     }
 
     /**
-     * @todo provide my visibility retriction
-     * dev & test
+     * OK
      */
     public function getCommunity($communityId = null) {
         if ($communityId != null && !OpenM_Book_Tool::isGroupIdValid($communityId))

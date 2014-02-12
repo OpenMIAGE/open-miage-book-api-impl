@@ -26,6 +26,8 @@ class OpenM_Book_AdminImpl extends OpenM_BookCommonsImpl implements OpenM_Book_A
     private $admin;
     private $apiToDAOPropertyNameConvertion;
 
+    const INDEXED_ANCESTOR_NAME_NUMBER = 3;
+
     private function isAdmin() {
         if ($this->admin instanceof HashtableString)
             return true;
@@ -121,13 +123,11 @@ class OpenM_Book_AdminImpl extends OpenM_BookCommonsImpl implements OpenM_Book_A
     }
 
     public static function _addCommunity($communityParentId, $name, $section) {
+
         OpenM_Log::debug("User can add community", __CLASS__, __METHOD__, __LINE__);
         $groupDAO = new OpenM_Book_GroupDAO();
         OpenM_Log::debug("Create group community in DAO", __CLASS__, __METHOD__, __LINE__);
         $community = $groupDAO->create($name, OpenM_Book_GroupDAO::TYPE_COMMUNITY);
-        $groupSearchDAO = new OpenM_Book_SearchDAO();
-        OpenM_Log::debug("index community name", __CLASS__, __METHOD__, __LINE__);
-        $groupSearchDAO->index($name, $community->get(OpenM_Book_GroupDAO::ID), OpenM_Book_SearchDAO::TYPE_GENERIC_GROUP);
         OpenM_Log::debug("Create group moderator in DAO", __CLASS__, __METHOD__, __LINE__);
         $moderator = $groupDAO->create("moderator");
         OpenM_Log::debug("Create group banned users in DAO", __CLASS__, __METHOD__, __LINE__);
@@ -138,9 +138,23 @@ class OpenM_Book_AdminImpl extends OpenM_BookCommonsImpl implements OpenM_Book_A
         OpenM_Log::debug("Create associate banned group in DAO", __CLASS__, __METHOD__, __LINE__);
         $communityBannedGroupDAO = new OpenM_Book_Community_Banned_UsersDAO();
         $communityBannedGroupDAO->create($community->get(OpenM_Book_GroupDAO::ID), $bannedGroup->get(OpenM_Book_GroupDAO::ID));
-        $groupContentGroupDAO = new OpenM_Book_Group_Content_GroupDAO();
         OpenM_Log::debug("add community in community parent in DAO", __CLASS__, __METHOD__, __LINE__);
+        $groupContentGroupDAO = new OpenM_Book_Group_Content_GroupDAO();
         $groupContentGroupDAO->create($communityParentId, $community->get(OpenM_Book_GroupDAO::ID));
+        OpenM_Log::debug("search ancestors community names", __CLASS__, __METHOD__, __LINE__);
+        $ancestors = $groupContentGroupDAO->getCommunityAncestorNames($community->get(OpenM_Book_GroupDAO::ID));
+        $names = "";
+        $parent = $ancestors->get($community->get(OpenM_Book_Group_Content_GroupDAO::GROUP_ID));
+        for ($i = 0; $i < self::INDEXED_ANCESTOR_NAME_NUMBER; $i++) {
+            if ($parent === null)
+                break;
+            $names = $parent->get(OpenM_Book_GroupDAO::NAME) . " $names";
+            $c = $parent;
+            $parent = $ancestors->get($c->get(OpenM_Book_Group_Content_GroupDAO::GROUP_PARENT_ID));
+        }
+        OpenM_Log::debug("index community name", __CLASS__, __METHOD__, __LINE__);
+        $groupSearchDAO = new OpenM_Book_SearchDAO();
+        $groupSearchDAO->index("$names $name", $community->get(OpenM_Book_GroupDAO::ID), OpenM_Book_SearchDAO::TYPE_GENERIC_GROUP);
         OpenM_Log::debug("search community moderator group parent in DAO", __CLASS__, __METHOD__, __LINE__);
         $moderatorParent = $communityModeratorDAO->getFromCommunity($communityParentId);
         OpenM_Log::debug("search community banned group parent in DAO", __CLASS__, __METHOD__, __LINE__);

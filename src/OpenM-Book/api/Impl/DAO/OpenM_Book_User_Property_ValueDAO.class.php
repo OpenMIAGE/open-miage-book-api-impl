@@ -83,7 +83,7 @@ class OpenM_Book_User_Property_ValueDAO extends OpenM_Book_DAO {
                 . " ORDER BY t." . OpenM_Book_User_PropertyDAO::NAME;
 
 
-        $result = self::$db->request($sql, self::ID);
+        $result = self::$db->request($sql);
         $return = new HashtableString();
         $i = 0;
         while ($line = self::$db->fetch_array($result)) {

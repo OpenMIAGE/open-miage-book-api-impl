@@ -25,7 +25,8 @@ class OpenM_Book_SearchDAO extends OpenM_Book_DAO {
     const MAX_RESULT_MAX_NUMBER = 30;
 
     public function index($string, $id, $type, $owner = null) {
-        $terms = OpenM_Book_Tool::strlwr($string);
+        $terms = trim(preg_replace("/([^a-z0-9]|\s)+/", " ", OpenM_Book_Tool::strlwr($string)));
+        OpenM_Log::debug("index '$terms'", __CLASS__, __METHOD__, __LINE__);
         $arrayString = array_values(array_unique(explode(" ", $terms)));
 
         $limit = min(array(sizeof($arrayString), self::MAX_TERM_NUMBER));

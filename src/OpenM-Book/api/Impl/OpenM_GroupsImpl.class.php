@@ -347,6 +347,7 @@ class OpenM_GroupsImpl extends OpenM_BookCommonsImpl implements OpenM_Groups {
         OpenM_Log::debug("result found : " . $result->size(), __CLASS__, __METHOD__, __LINE__);
         $e = $result->keys();
         $resultList = new HashtableString();
+        $communities = new HashtableString();
         while ($e->hasNext()) {
             $r = $result->get($e->next());
             $row = new HashtableString();
@@ -357,8 +358,28 @@ class OpenM_GroupsImpl extends OpenM_BookCommonsImpl implements OpenM_Groups {
                     ->put(self::RETURN_RESULT_NAME_PARAMETER, $r->get(OpenM_Book_SearchDAO::STRING))
                     ->put(self::RETURN_RESULT_TYPE_PARAMETER, $type);
             $resultList->put($type . $r->get(OpenM_Book_SearchDAO::ID), $row);
+            if ($type === self::RETURN_RESULT_TYPE_GENERIC_GROUP_VALUE) {
+                $c = new HashtableString();
+                $communities->put($r->get(OpenM_Book_SearchDAO::ID), $c->put(OpenM_Book_GroupDAO::ID, $r->get(OpenM_Book_SearchDAO::ID)));
+            }
         }
-        return $this->ok()->put(self::RETURN_RESULT_LIST_PARAMETER, $resultList);
+        $return = $this->ok()->put(self::RETURN_RESULT_LIST_PARAMETER, $resultList);
+        if ($communities->size()) {
+            $groupContentUserDAO = new OpenM_Book_Group_Content_UserDAO();
+            $ancestors = $groupContentUserDAO->getCommunitiesAncestors($communities);
+            OpenM_Log::debug("Ancestor found in DAO", __CLASS__, __METHOD__, __LINE__);
+            $e = $ancestors->keys();
+            $a = new HashtableString();
+            $return->put(self::RETURN_COMMUNITY_ANCESTORS_LIST, $a);
+            while ($e->hasNext()) {
+                $line = $ancestors->get($e->next());
+                $l = new HashtableString();
+                $l->put(self::RETURN_COMMUNITY_ID_PARAMETER, $line->get(OpenM_Book_Group_Content_GroupDAO::GROUP_PARENT_ID)->toInt())
+                        ->put(self::RETURN_COMMUNITY_NAME_PARAMETER, $line->get(OpenM_Book_GroupDAO::NAME));
+                $a->put($line->get(OpenM_Book_Group_Content_GroupDAO::GROUP_ID)->toInt(), $l);
+            }
+        }
+        return $return;
     }
 
     public function getGroupContent($groupId) {
