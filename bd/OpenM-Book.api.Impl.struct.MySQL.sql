@@ -102,7 +102,8 @@ CREATE TABLE IF NOT EXISTS `OpenM_BOOK_GROUP_SEARCH` (
   `string` varchar(20) NOT NULL,
   `type` tinyint(1) NOT NULL,
   `owner_id` int(12) DEFAULT NULL,
-  PRIMARY KEY (`string`,`type`,`id`)
+  PRIMARY KEY (`string`,`type`,`id`),
+  KEY `id` (`id`,`type`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 DROP TABLE IF EXISTS `OpenM_BOOK_INVITATION`;
@@ -130,40 +131,6 @@ CREATE TABLE IF NOT EXISTS `OpenM_BOOK_SECTION` (
   PRIMARY KEY (`section_id`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8 AUTO_INCREMENT=322 ;
 
-DROP TABLE IF EXISTS `OpenM_BOOK_SIGNAL`;
-CREATE TABLE IF NOT EXISTS `OpenM_BOOK_SIGNAL` (
-  `type` varchar(20) NOT NULL,
-  `user_id` int(11) NOT NULL,
-  `uri` varchar(255) NOT NULL,
-  `message` varchar(255) NOT NULL,
-  `time` int(12) NOT NULL
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
-
-DROP TABLE IF EXISTS `OpenM_BOOK_SIGNAL_GROUP`;
-CREATE TABLE IF NOT EXISTS `OpenM_BOOK_SIGNAL_GROUP` (
-  `group_id` bigint(16) NOT NULL,
-  `signaled_by` int(11) NOT NULL,
-  `time` int(12) NOT NULL,
-  `message` varchar(255) NOT NULL
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
-
-DROP TABLE IF EXISTS `OpenM_BOOK_SIGNAL_USER`;
-CREATE TABLE IF NOT EXISTS `OpenM_BOOK_SIGNAL_USER` (
-  `user_id` int(11) NOT NULL,
-  `signaled_by` int(11) NOT NULL,
-  `time` int(12) NOT NULL,
-  `message` varchar(255) NOT NULL
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
-
-DROP TABLE IF EXISTS `OpenM_BOOK_SIGNAL_USER_IN_GROUP`;
-CREATE TABLE IF NOT EXISTS `OpenM_BOOK_SIGNAL_USER_IN_GROUP` (
-  `user_id` int(11) NOT NULL,
-  `signaled_by` int(11) NOT NULL,
-  `group_id` bigint(16) NOT NULL,
-  `time` int(12) NOT NULL,
-  `message` varchar(255) NOT NULL
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
-
 DROP TABLE IF EXISTS `OpenM_BOOK_USER`;
 CREATE TABLE IF NOT EXISTS `OpenM_BOOK_USER` (
   `user_id` int(11) NOT NULL AUTO_INCREMENT,
@@ -182,7 +149,7 @@ CREATE TABLE IF NOT EXISTS `OpenM_BOOK_USER` (
   PRIMARY KEY (`user_id`),
   UNIQUE KEY `user_id_Unique` (`uid`),
   KEY `first_name_last_name` (`first_name`,`last_name`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8 AUTO_INCREMENT=76 ;
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8 AUTO_INCREMENT=78 ;
 
 DROP TABLE IF EXISTS `OpenM_BOOK_USER_PROPERTY`;
 CREATE TABLE IF NOT EXISTS `OpenM_BOOK_USER_PROPERTY` (
