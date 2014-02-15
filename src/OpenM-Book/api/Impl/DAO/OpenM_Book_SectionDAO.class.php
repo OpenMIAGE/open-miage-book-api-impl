@@ -42,7 +42,7 @@ class OpenM_Book_SectionDAO extends OpenM_Book_DAO {
             self::REG_EXP => $regExp
         );
         if (!is_null($section_parent_id))
-            $arrayARgument[self::SECTION_PARENT_ID] = intval($section_parent_id);
+            $arrayARgument[self::SECTION_PARENT_ID] = intval("$section_parent_id");
         self::$db->request(OpenM_DB::insert($this->getTABLE(self::OpenM_BOOK_SECTION_Table_Name), $arrayARgument));
 
         return self::$db->request_fetch_HashtableString(OpenM_DB::select($this->getTABLE(self::OpenM_BOOK_SECTION_Table_Name), $arrayARgument));
@@ -50,7 +50,7 @@ class OpenM_Book_SectionDAO extends OpenM_Book_DAO {
 
     public function get($sectionId) {
         return self::$db->request_fetch_HashtableString(OpenM_DB::select($this->getTABLE(self::OpenM_BOOK_SECTION_Table_Name), array(
-                            self::ID => intval($sectionId)
+                            self::ID => intval("$sectionId")
         )));
     }
 
@@ -58,7 +58,7 @@ class OpenM_Book_SectionDAO extends OpenM_Book_DAO {
         return self::$db->request_fetch_HashtableString(OpenM_DB::select($this->getTABLE(self::OpenM_BOOK_SECTION_Table_Name))
                         . " WHERE " . self::ID . "=("
                         . OpenM_DB::select($this->getTABLE(OpenM_Book_Community_To_SectionDAO::OPENM_BOOK_COMMUNITY_TO_SECTION_TABLE_NAME), array(
-                            OpenM_Book_Community_To_SectionDAO::COMMUNITY_ID => intval($communityId)
+                            OpenM_Book_Community_To_SectionDAO::COMMUNITY_ID => intval("$communityId")
                                 ), array(
                             OpenM_Book_Community_To_SectionDAO::SECTION_ID
                         ))
@@ -68,7 +68,7 @@ class OpenM_Book_SectionDAO extends OpenM_Book_DAO {
 
     public function getFromParent($sectionId) {
         return self::$db->request_HashtableString(OpenM_DB::select($this->getTABLE(self::OpenM_BOOK_SECTION_Table_Name), array(
-                            self::SECTION_PARENT_ID => intval($sectionId)
+                            self::SECTION_PARENT_ID => intval("$sectionId")
                         )), self::ID);
     }
 
@@ -82,7 +82,7 @@ class OpenM_Book_SectionDAO extends OpenM_Book_DAO {
                         ))
                         . " WHERE " . OpenM_Book_Community_To_SectionDAO::SECTION_ID . " IN ("
                         . OpenM_DB::select($this->getTABLE(self::OpenM_BOOK_SECTION_Table_Name), array(
-                            self::SECTION_PARENT_ID => intval($sectionId)
+                            self::SECTION_PARENT_ID => intval("$sectionId")
                                 ), array(
                             self::ID
                         ))
@@ -96,7 +96,7 @@ class OpenM_Book_SectionDAO extends OpenM_Book_DAO {
 
     public function remove($sectionId) {
         self::$db->request(OpenM_DB::delete($this->getTABLE(self::OpenM_BOOK_SECTION_Table_Name), array(
-                    self::ID => intval($sectionId)
+                    self::ID => intval("$sectionId")
         )));
     }
 
@@ -104,7 +104,7 @@ class OpenM_Book_SectionDAO extends OpenM_Book_DAO {
         self::$db->request(OpenM_DB::update($this->getTABLE(self::OpenM_BOOK_SECTION_Table_Name), array(
                     $property => $value
                         ), array(
-                    self::ID => intval($sectionId)
+                    self::ID => intval("$sectionId")
         )));
     }
 

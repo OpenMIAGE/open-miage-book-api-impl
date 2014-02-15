@@ -71,9 +71,15 @@ class OpenM_BookImpl extends OpenM_BookCommonsImpl implements OpenM_Book {
         $group = $groupDAO->create("visibility of " . $communityId);
         $groupVisibilityDAO = new OpenM_Book_Community_VisibilityDAO();
         $groupVisibilityDAO->create($this->user->get(OpenM_Book_UserDAO::ID)->toInt(), $communityId, $group->get(OpenM_Book_GroupDAO::ID));
-        OpenM_Log::debug("add community in visibility group", __CLASS__, __METHOD__, __LINE__);
-        $groupContentGroupDAO = new OpenM_Book_Group_Content_GroupDAO();
-        $groupContentGroupDAO->create($group->get(OpenM_Book_GroupDAO::ID), $communityId);
+        if ($section->get(OpenM_Book_SectionDAO::VALIDATION_REQUIRED)->toInt() === OpenM_Book_SectionDAO::ACTIVATED) {
+            OpenM_Log::debug("add community in visibility group", __CLASS__, __METHOD__, __LINE__);
+            $groupContentGroupDAO = new OpenM_Book_Group_Content_GroupDAO();
+            $groupContentGroupDAO->create($group->get(OpenM_Book_GroupDAO::ID), $communityId);
+        } else {
+            OpenM_Log::debug("add user in visibility group", __CLASS__, __METHOD__, __LINE__);
+            $groupContentUserDAO = new OpenM_Book_Group_Content_UserDAO();
+            $groupContentUserDAO->create($group->get(OpenM_Book_GroupDAO::ID), $this->user->get(OpenM_Book_UserDAO::ID));
+        }
         return $this->ok();
     }
 
@@ -146,8 +152,7 @@ class OpenM_BookImpl extends OpenM_BookCommonsImpl implements OpenM_Book {
     }
 
     /**
-     * @todo provide my visibility retriction
-     * dev & test
+     * OK
      */
     public function getCommunity($communityId = null) {
         if ($communityId != null && !OpenM_Book_Tool::isGroupIdValid($communityId))
@@ -461,7 +466,7 @@ class OpenM_BookImpl extends OpenM_BookCommonsImpl implements OpenM_Book {
             }
         }
 
-        OpenM_Log::debug("search users valid in DAO", __CLASS__, __METHOD__, __LINE__);
+        OpenM_Log::debug("search users not valid in DAO", __CLASS__, __METHOD__, __LINE__);
         $communityContentUserDAO = new OpenM_Book_Community_Content_UserDAO();
         $users = $communityContentUserDAO->getUsers($this->user->get(OpenM_Book_UserDAO::ID)->toInt(), $communityId, $start, $numberOfResult, false, $this->user->get(OpenM_Book_UserDAO::ID)->toInt());
         $userList = new HashtableString();
@@ -506,7 +511,7 @@ class OpenM_BookImpl extends OpenM_BookCommonsImpl implements OpenM_Book {
         if ($groupVisibility !== null) {
             OpenM_Log::debug("remove visibility group", __CLASS__, __METHOD__, __LINE__);
             $groupDAO = new OpenM_Book_GroupDAO();
-            $groupDAO->delete($groupVisibility->get(OpenM_Book_Community_VisibilityDAO::COMMUNITY_ID));
+            $groupDAO->delete($groupVisibility->get(OpenM_Book_Community_VisibilityDAO::VISIBILITY_ID));
             $groupVisibilityDAO->delete($this->user->get(OpenM_Book_UserDAO::ID)->toInt(), $communityId);
         }
         return $this->ok();
@@ -528,9 +533,8 @@ class OpenM_BookImpl extends OpenM_BookCommonsImpl implements OpenM_Book {
             return $this->error;
 
         $adminDAO = new OpenM_Book_AdminDAO();
-        $isUserAdmin = false;
+        $isUserAdmin = ($adminDAO->get($this->user->get(OpenM_Book_UserDAO::UID)) != null);
         if ($this->user->get(OpenM_Book_UserDAO::ID)->toInt() == $userId) {
-            $isUserAdmin = ($adminDAO->get($this->user->get(OpenM_Book_UserDAO::UID)) != null);
             if (!$isUserAdmin)
                 return $this->error("You can't validate yourself");
         }

@@ -20,12 +20,13 @@ class OpenM_Book_SearchDAO extends OpenM_Book_DAO {
     const TYPE_PERSONAL_GROUP = 2;
     const TYPE_USER = 3;
     const LENTH_WORD = 10;
-    const MAX_TERM_NUMBER = 5;
+    const MAX_TERM_NUMBER = 8;
     const MAX_RESULT_DEFAULT_NUMBER = 10;
     const MAX_RESULT_MAX_NUMBER = 30;
 
     public function index($string, $id, $type, $owner = null) {
-        $terms = OpenM_Book_Tool::strlwr($string);
+        $terms = trim(preg_replace("/([^a-z0-9]|\s)+/", " ", OpenM_Book_Tool::strlwr($string)));
+        OpenM_Log::debug("index '$terms'", __CLASS__, __METHOD__, __LINE__);
         $arrayString = array_values(array_unique(explode(" ", $terms)));
 
         $limit = min(array(sizeof($arrayString), self::MAX_TERM_NUMBER));
@@ -39,36 +40,20 @@ class OpenM_Book_SearchDAO extends OpenM_Book_DAO {
 
         for ($i = 0; $i < $limit; $i++) {
             $a = $array;
-            $a[self::STRING] = $arrayString[$i];
+            $a[self::STRING] = new String($arrayString[$i]);
             self::$db->request(OpenM_DB::insert($this->getTABLE(self::OpenM_BOOK_SEARCH_TABLE_NAME), $a));
         }
     }
 
-    public function unIndex($string, $id, $type, $owner = null) {
-        $terms = OpenM_Book_Tool::strlwr($string);
-        $arrayString = explode(" ", $terms);
-
-        $limit = min(array(sizeof($arrayString), self::MAX_TERM_NUMBER));
-        $array = array(
-            self::ID => $id,
-            self::TYPE => $type,
-        );
-        if ($owner != null)
-            $array[self::OWNER] = $owner;
-
-        $in = "";
-        for ($i = 0; $i < $limit; $i++)
-            $in .= "'" . $arrayString[$i] . "', ";
-
-        $in = substr($in, 0, -2);
-
-        self::$db->request(OpenM_DB::delete($this->getTABLE(self::OpenM_BOOK_SEARCH_TABLE_NAME), $array)
-                . " AND " . self::STRING . " IN ($in)"
-        );
+    public function unIndex($id, $type) {
+        self::$db->request(OpenM_DB::delete($this->getTABLE(self::OpenM_BOOK_SEARCH_TABLE_NAME), array(
+                    self::ID => intval("$id"),
+                    self::TYPE => intval("$type")
+        )));
     }
 
     public function search($string, $maxNumberResult = null, $genericsGroup = true, $personalGroups = true, $user = true) {
-        $terms = OpenM_Book_Tool::strlwr($string);
+        $terms = preg_replace("/[^a-z0-9]+/", " ", OpenM_Book_Tool::strlwr($string));
         $arrayString = explode(" ", $terms);
         $like = "";
         $limit = min(array(sizeof($arrayString), self::MAX_TERM_NUMBER));
@@ -85,20 +70,14 @@ class OpenM_Book_SearchDAO extends OpenM_Book_DAO {
             $request .= "(" . $this->searchGenericGroups($like) . ")";
             $i++;
         }
-        OpenM_Log::debug("t6", __CLASS__, __METHOD__, __LINE__);
-
         if ($personalGroups) {
             $request .= ((strlen($request) > 0) ? " UNION ALL (" : "(") . $this->searchPersonalGroups($like) . ")";
             $i++;
         }
-        OpenM_Log::debug("t7", __CLASS__, __METHOD__, __LINE__);
-
         if ($user) {
             $request .= ((strlen($request) > 0) ? " UNION ALL (" : "(") . $this->searchUsers($like) . ")";
             $i++;
         }
-        OpenM_Log::debug("t8", __CLASS__, __METHOD__, __LINE__);
-
         if (strlen($request) == 0)
             return null;
 
@@ -109,12 +88,20 @@ class OpenM_Book_SearchDAO extends OpenM_Book_DAO {
         $request = "SELECT " . self::ID . ", " . self::STRING . ", " . self::TYPE . " FROM ($request) o ORDER BY nb DESC, " . self::STRING;
 
         if ($maxNumberResult == null)
-            $maxNumberResult
-                    = self::MAX_RESULT_DEFAULT_NUMBER;
+            $maxNumberResult = self::MAX_RESULT_DEFAULT_NUMBER;
         else
             $maxNumberResult = min(array(intval($maxNumberResult), self::MAX_RESULT_MAX_NUMBER));
 
-        return self::$db->request_ArrayList(self::$db->limit($request, $maxNumberResult));
+        $return = new HashtableString();
+        $sql = self::$db->limit($request, $maxNumberResult);
+        $result = self::$db->request($sql, self::ID);
+        $i = 0;
+        while ($line = self::$db->fetch_array($result)) {
+            $l = HashtableString::from($line);
+            $return->put($i, $l->put(self::STRING, self::$db->unescape($l->get(self::STRING))));
+            $i++;
+        }
+        return $return;
     }
 
     private function searchGenericGroups($like) {

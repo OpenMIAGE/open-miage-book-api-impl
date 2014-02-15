@@ -64,7 +64,6 @@ class OpenM_GroupsImpl extends OpenM_BookCommonsImpl implements OpenM_Groups {
         if ($userDAO->getFromId($userId) == null)
             return $this->error(self::RETURN_ERROR_MESSAGE_USER_NOT_FOUND_VALUE);
 
-
         OpenM_Log::debug("check if user isn't in target group", __CLASS__, __METHOD__, __LINE__);
         $groupContentUser = new OpenM_Book_Group_Content_UserDAO();
         if ($groupContentUser->getFromUser($userId) === null)
@@ -111,20 +110,28 @@ class OpenM_GroupsImpl extends OpenM_BookCommonsImpl implements OpenM_Groups {
         else
             $withAncestors = false;
 
-        if ($userId !== "" && $userId !== null && $userId != $this->user->get(OpenM_Book_UserDAO::ID))
-            return $this->ok();
 
-        $uid = $this->getManager()->getID();
+        if ($userId !== null && $userId !== "" && $userId !== $this->user->get(OpenM_Book_UserDAO::ID)->toInt()) {
+            $userDAO = new OpenM_Book_UserDAO();
+            $user = $userDAO->get($userId);
+            if ($user === null)
+                return $this->error("user not found");
+        }
+        else
+            $userId = $this->user->get(OpenM_Book_UserDAO::ID);
+
         OpenM_Log::debug("search my communities in DAO", __CLASS__, __METHOD__, __LINE__);
         $groupContentUserDAO = new OpenM_Book_Group_Content_UserDAO();
-        $communities = $groupContentUserDAO->getFromUID($uid, true, false);
+        $communities = $groupContentUserDAO->getCommunitiesFromId($userId, $this->user->get(OpenM_Book_UserDAO::ID));
         OpenM_Log::debug("translate communities to return format", __CLASS__, __METHOD__, __LINE__);
         $r = $this->getGroups($communities, false);
         $return = $this->ok()->put(self::RETURN_GROUP_LIST_PARAMETER, $r);
+
         OpenM_Log::debug("check if withAncestor is activated", __CLASS__, __METHOD__, __LINE__);
         if ($withAncestors) {
             OpenM_Log::debug("withAncestor is activated", __CLASS__, __METHOD__, __LINE__);
-            $ancestors = $groupContentUserDAO->getMyCommunitiesAncestors($this->user->get(OpenM_Book_UserDAO::ID)->toInt());
+            $ancestors = $groupContentUserDAO->getCommunitiesAncestors($communities);
+            OpenM_Log::debug("Ancestor found in DAO", __CLASS__, __METHOD__, __LINE__);
             $e = $ancestors->keys();
             $a = new HashtableString();
             $return->put(self::RETURN_COMMUNITY_ANCESTORS_LIST, $a);
@@ -171,6 +178,8 @@ class OpenM_GroupsImpl extends OpenM_BookCommonsImpl implements OpenM_Groups {
             $g = new HashtableString();
             $g->put(self::RETURN_GROUP_ID_PARAMETER, $group->get(OpenM_Book_GroupDAO::ID)->toInt())
                     ->put(self::RETURN_GROUP_NAME_PARAMETER, $group->get(OpenM_Book_GroupDAO::NAME));
+            if ($group->containsKey(OpenM_Book_Community_Content_UserDAO::IS_VALIDATED))
+                $g->put(self::RETURN_USER_VALIDATED_IN_COMMUNITY_PARAMETER, ($group->get(OpenM_Book_Community_Content_UserDAO::IS_VALIDATED)->toInt() === OpenM_Book_Community_Content_UserDAO::VALIDATED) ? self::TRUE_PARAMETER_VALUE : self::FALSE_PARAMETER_VALUE);
 
             if ($displayType)
                 $g->put(self::RETURN_GROUP_TYPE_PARAMETER, $group->get(OpenM_Book_GroupDAO::TYPE)->toInt());
@@ -300,7 +309,7 @@ class OpenM_GroupsImpl extends OpenM_BookCommonsImpl implements OpenM_Groups {
             return $this->error(self::RETURN_ERROR_MESSAGE_GROUP_NOT_FOUND_VALUE);
         OpenM_Log::debug("unindex group name", __CLASS__, __METHOD__, __LINE__);
         $searchDAO = new OpenM_Book_SearchDAO();
-        $searchDAO->unIndex($group->get(OpenM_Book_GroupDAO::NAME), $group->get(OpenM_Book_GroupDAO::ID), OpenM_Book_SearchDAO::TYPE_PERSONAL_GROUP, $this->user->get(OpenM_Book_UserDAO::ID));
+        $searchDAO->unIndex($group->get(OpenM_Book_GroupDAO::ID), OpenM_Book_SearchDAO::TYPE_PERSONAL_GROUP);
         OpenM_Log::debug("update name in DAO", __CLASS__, __METHOD__, __LINE__);
         $groupDAO->update($groupId, $groupName);
         OpenM_Log::debug("index new name of group", __CLASS__, __METHOD__, __LINE__);
@@ -336,10 +345,11 @@ class OpenM_GroupsImpl extends OpenM_BookCommonsImpl implements OpenM_Groups {
         $searchDAO = new OpenM_Book_SearchDAO();
         $result = $searchDAO->search($terms, $maxNumberResult, !$userOnly, !$userOnly);
         OpenM_Log::debug("result found : " . $result->size(), __CLASS__, __METHOD__, __LINE__);
-        $e = $result->enum();
+        $e = $result->keys();
         $resultList = new HashtableString();
+        $communities = new HashtableString();
         while ($e->hasNext()) {
-            $r = $e->next();
+            $r = $result->get($e->next());
             $row = new HashtableString();
             $type = (($r->get(OpenM_Book_SearchDAO::TYPE)->toInt() === OpenM_Book_SearchDAO::TYPE_USER) ?
                             self::RETURN_RESULT_TYPE_USER_VALUE : (($r->get(OpenM_Book_SearchDAO::TYPE)->toInt() === OpenM_Book_SearchDAO::TYPE_GENERIC_GROUP) ?
@@ -348,11 +358,31 @@ class OpenM_GroupsImpl extends OpenM_BookCommonsImpl implements OpenM_Groups {
                     ->put(self::RETURN_RESULT_NAME_PARAMETER, $r->get(OpenM_Book_SearchDAO::STRING))
                     ->put(self::RETURN_RESULT_TYPE_PARAMETER, $type);
             $resultList->put($type . $r->get(OpenM_Book_SearchDAO::ID), $row);
+            if ($type === self::RETURN_RESULT_TYPE_GENERIC_GROUP_VALUE) {
+                $c = new HashtableString();
+                $communities->put($r->get(OpenM_Book_SearchDAO::ID), $c->put(OpenM_Book_GroupDAO::ID, $r->get(OpenM_Book_SearchDAO::ID)));
+            }
         }
-        return $this->ok()->put(self::RETURN_RESULT_LIST_PARAMETER, $resultList);
+        $return = $this->ok()->put(self::RETURN_RESULT_LIST_PARAMETER, $resultList);
+        if ($communities->size()) {
+            $groupContentUserDAO = new OpenM_Book_Group_Content_UserDAO();
+            $ancestors = $groupContentUserDAO->getCommunitiesAncestors($communities);
+            OpenM_Log::debug("Ancestor found in DAO", __CLASS__, __METHOD__, __LINE__);
+            $e = $ancestors->keys();
+            $a = new HashtableString();
+            $return->put(self::RETURN_COMMUNITY_ANCESTORS_LIST, $a);
+            while ($e->hasNext()) {
+                $line = $ancestors->get($e->next());
+                $l = new HashtableString();
+                $l->put(self::RETURN_COMMUNITY_ID_PARAMETER, $line->get(OpenM_Book_Group_Content_GroupDAO::GROUP_PARENT_ID)->toInt())
+                        ->put(self::RETURN_COMMUNITY_NAME_PARAMETER, $line->get(OpenM_Book_GroupDAO::NAME));
+                $a->put($line->get(OpenM_Book_Group_Content_GroupDAO::GROUP_ID)->toInt(), $l);
+            }
+        }
+        return $return;
     }
 
-    public function getGroupsFromGroup($groupId) {
+    public function getGroupContent($groupId) {
         if (!OpenM_Book_Tool::isGroupIdValid($groupId))
             return $this->error("groupId must be an integer");
 
@@ -368,31 +398,19 @@ class OpenM_GroupsImpl extends OpenM_BookCommonsImpl implements OpenM_Groups {
         $groups = $groupContentGroupDAO->getChilds($groupId);
         if ($groups == null) {
             $list = new HashtableString();
-            return $this->ok()->put(self::RETURN_GROUP_LIST_PARAMETER, $list);
+            $return = $this->ok()->put(self::RETURN_GROUP_LIST_PARAMETER, $list);
         }
-        return $this->ok()->put(self::RETURN_GROUP_LIST_PARAMETER, $this->getGroups($groups));
-    }
-
-    public function getUsersFromGroup($groupId) {
-        if (!OpenM_Book_Tool::isGroupIdValid($groupId))
-            return $this->error("groupId must be an integer");
-
-        if (!$this->isUserRegistered())
-            return $this->error;
         else
-            $user = $this->user;
-
-        $groupContentGroupDAO = new OpenM_Book_Group_Content_GroupDAO();
-        if (!$groupContentGroupDAO->isDescendant($groupId, $user->get(OpenM_Book_UserDAO::PERSONAL_GROUPS)))
-            return $this->error(self::RETURN_ERROR_MESSAGE_NOT_YOUR_PERSONAL_GROUP_VALUE);
+            $return = $this->ok()->put(self::RETURN_GROUP_LIST_PARAMETER, $this->getGroups($groups));
 
         $groupContentUserDAO = new OpenM_Book_Group_Content_UserDAO();
         $users = $groupContentUserDAO->getUsersFromGroup($groupId);
         if ($users == null) {
             $list = new HashtableString();
-            return $this->ok()->put(self::RETURN_USER_LIST_PARAMETER, $list);
+            return $return->put(self::RETURN_USER_LIST_PARAMETER, $list);
         }
-        return $this->ok()->put(self::RETURN_USER_LIST_PARAMETER, $this->getUsers($users));
+        else
+            return $return->put(self::RETURN_USER_LIST_PARAMETER, $this->getUsers($users));
     }
 
     private function isGroupNameValid($name) {

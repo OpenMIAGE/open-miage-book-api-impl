@@ -46,14 +46,21 @@ class OpenM_Book_UserImpl extends OpenM_BookCommonsImpl implements OpenM_Book_Us
         if ($property == null)
             return $this->error("propertyId not found");
 
+        $error = $this->_checkValue($property->get(OpenM_Book_User_PropertyDAO::ID), $propertyValue);
+        if ($error !== null)
+            return $error;
+
         OpenM_Log::debug("propertyId exist in DAO", __CLASS__, __METHOD__, __LINE__);
+        $groupDAO = new OpenM_Book_GroupDAO();
+        OpenM_Log::debug("create property visibility group", __CLASS__, __METHOD__, __LINE__);
+        $group = $groupDAO->create("visibility");
         $userPropertyValueDAO = new OpenM_Book_User_Property_ValueDAO();
         OpenM_Log::debug("create property value in DAO", __CLASS__, __METHOD__, __LINE__);
-        $value = $userPropertyValueDAO->create($propertyId, $propertyValue, $user->get(OpenM_Book_UserDAO::ID)->toInt());
+        $value = $userPropertyValueDAO->create($propertyId, $propertyValue, $user->get(OpenM_Book_UserDAO::ID), $group->get(OpenM_Book_GroupDAO::ID));
 
         $userDAO = new OpenM_Book_UserDAO();
         OpenM_Log::debug("update user update time in DAO", __CLASS__, __METHOD__, __LINE__);
-        $userDAO->updateTime($user->get(OpenM_Book_UserDAO::ID)->toInt());
+        $userDAO->updateTime($user->get(OpenM_Book_UserDAO::ID));
 
         return $this->ok()->put(self::RETURN_USER_PROPERTY_VALUE_ID_PARAMETER, $value->get(OpenM_Book_User_Property_ValueDAO::ID));
     }
@@ -116,6 +123,10 @@ class OpenM_Book_UserImpl extends OpenM_BookCommonsImpl implements OpenM_Book_Us
                 $userPropertyValue = $propertyValueDAO->get($propertyValueId);
                 if ($userPropertyValue->size() == 0)
                     return $this->error(self::RETURN_ERROR_MESSAGE_PROPERTY_NOTFOUND_VALUE);
+                OpenM_Log::debug("search property in DAO", __CLASS__, __METHOD__, __LINE__);
+                $error = $this->_checkValue($userPropertyValue->get(OpenM_Book_User_Property_ValueDAO::PROPERTY_ID), $propertyValue);
+                if ($error !== null)
+                    return $error;
                 OpenM_Log::debug("check if property is property of user", __CLASS__, __METHOD__, __LINE__);
                 if ($userPropertyValue->get(OpenM_Book_User_Property_ValueDAO::USER_ID) != $this->user->get(OpenM_Book_UserDAO::ID))
                     return $this->error("it's not your property");
@@ -125,6 +136,17 @@ class OpenM_Book_UserImpl extends OpenM_BookCommonsImpl implements OpenM_Book_Us
                 break;
         }
         return $this->ok();
+    }
+
+    private function _checkValue($propertyId, $propertyValue) {
+        $propertyDAO = new OpenM_Book_User_PropertyDAO();
+        $property = $propertyDAO->getById($propertyId);
+        OpenM_Log::debug("check if property value respect property reg_exp", __CLASS__, __METHOD__, __LINE__);
+        if ($property === null)
+            return $this->error("property not found");
+        if ($property->get(OpenM_Book_User_PropertyDAO::REGEXP) . "" !== "" &&
+                !RegExp::ereg("^" . $property->get(OpenM_Book_User_PropertyDAO::REGEXP) . "$", $propertyValue))
+            return $this->error("property not respect reg_exp : ^" . $property->get(OpenM_Book_User_PropertyDAO::REGEXP) . "$");
     }
 
     /**
@@ -157,6 +179,9 @@ class OpenM_Book_UserImpl extends OpenM_BookCommonsImpl implements OpenM_Book_Us
 
         OpenM_Log::debug("property owned by user", __CLASS__, __METHOD__, __LINE__);
         $propertyValueDAO->delete($propertyValueId);
+        OpenM_Log::debug("delete visibility group", __CLASS__, __METHOD__, __LINE__);
+        $groupDAO = new OpenM_Book_GroupDAO();
+        $groupDAO->delete($propertyValue->get(OpenM_Book_User_Property_ValueDAO::VISIBILITY));
         OpenM_Log::debug("property deleted", __CLASS__, __METHOD__, __LINE__);
         $userDAO = new OpenM_Book_UserDAO();
         $userDAO->updateTime($userId);
@@ -173,7 +198,6 @@ class OpenM_Book_UserImpl extends OpenM_BookCommonsImpl implements OpenM_Book_Us
 
     /**
      * OK
-     * TODO Visibility
      */
     public function getUserProperties($userId = null, $basicOnly = null) {
         if (!String::isStringOrNull($userId))
@@ -222,36 +246,40 @@ class OpenM_Book_UserImpl extends OpenM_BookCommonsImpl implements OpenM_Book_Us
             }
         }
 
-
-        $date = new Date($user->get(OpenM_Book_UserDAO::BIRTHDAY)->toInt());
-        if ($isUserCalling)
-            $return->put(self::RETURN_USER_BIRTHDAY_PARAMETER, $date->toString("d/m/Y"));
-        else if ($user->get(OpenM_Book_UserDAO::BIRTHDAY_DISPLAYED)->toInt() == OpenM_Book_UserDAO::ACTIVE) {
-            if ($user->get(OpenM_Book_UserDAO::BIRTHDAY_YEAR_DISPLAYED)->toInt() == OpenM_Book_UserDAO::ACTIVE)
-                $return->put(self::RETURN_USER_BIRTHDAY_PARAMETER, $date->toString("d/m/Y"));
-            else {
-                $return->put(self::RETURN_USER_BIRTHDAY_PARAMETER, $date->toString("d/m"));
-            }
-        }
-        if ($isUserCalling || $user->get(OpenM_Book_UserDAO::BIRTHDAY_DISPLAYED)->toInt() == OpenM_Book_UserDAO::ACTIVE) {
-            if ($user->get(OpenM_Book_UserDAO::BIRTHDAY_YEAR_DISPLAYED)->toInt() == OpenM_Book_UserDAO::ACTIVE)
-                $return->put(self::RETURN_USER_BIRTHDAY_DISPLAY_YEAR_PARAMETER, self::TRUE_PARAMETER_VALUE);
-            else
-                $return->put(self::RETURN_USER_BIRTHDAY_DISPLAY_YEAR_PARAMETER, self::FALSE_PARAMETER_VALUE);
-        }
-
         $propertyList = new HashtableString();
         if ($basicOnly === self::FALSE_PARAMETER_VALUE) {
+
+            $date = new Date($user->get(OpenM_Book_UserDAO::BIRTHDAY)->toInt());
+            $birthdayDisplayed = false;
+            if ($isUserCalling)
+                $return->put(self::RETURN_USER_BIRTHDAY_PARAMETER, $date->toString("d/m/Y"));
+            else {
+                $groupContentUserDAO = new OpenM_Book_Group_Content_UserDAO();
+                OpenM_Log::debug("Check if user can view birthday", __CLASS__, __METHOD__, __LINE__);
+                if ($groupContentUserDAO->isUserInGroup($userId, $user->get(OpenM_Book_UserDAO::BIRTHDAY_VISIBILITY)->toInt())) {
+                    $birthdayDisplayed = true;
+                    if ($user->get(OpenM_Book_UserDAO::BIRTHDAY_YEAR_DISPLAYED)->toInt() == OpenM_Book_UserDAO::ACTIVE)
+                        $return->put(self::RETURN_USER_BIRTHDAY_PARAMETER, $date->toString("d/m/Y"));
+                    else {
+                        $return->put(self::RETURN_USER_BIRTHDAY_PARAMETER, $date->toString("d/m"));
+                    }
+                }
+                else
+                    OpenM_Log::debug("user cant view birthday", __CLASS__, __METHOD__, __LINE__);
+            }
+
+            if ($isUserCalling || $birthdayDisplayed) {
+                if ($user->get(OpenM_Book_UserDAO::BIRTHDAY_YEAR_DISPLAYED)->toInt() == OpenM_Book_UserDAO::ACTIVE)
+                    $return->put(self::RETURN_USER_BIRTHDAY_DISPLAY_YEAR_PARAMETER, self::TRUE_PARAMETER_VALUE);
+                else
+                    $return->put(self::RETURN_USER_BIRTHDAY_DISPLAY_YEAR_PARAMETER, self::FALSE_PARAMETER_VALUE);
+            }
+
             OpenM_Log::debug("Check user property in DAO", __CLASS__, __METHOD__, __LINE__);
             $userPropertiesValueDAO = new OpenM_Book_User_Property_ValueDAO();
 
-            if ($isUserCalling) {
-                OpenM_Log::debug("search my Properties in DAO", __CLASS__, __METHOD__, __LINE__);
-                $values = $userPropertiesValueDAO->getFromUser($userId);
-            } else {
-                OpenM_Log::debug("search Properties from user in DAO", __CLASS__, __METHOD__, __LINE__);
-                $values = $userPropertiesValueDAO->getFromUser($userId, $userIdCalling);
-            }
+            OpenM_Log::debug("search Properties from user in DAO", __CLASS__, __METHOD__, __LINE__);
+            $values = $userPropertiesValueDAO->getFromUser($userId, $userIdCalling);
 
             if ($values != null) {
                 OpenM_Log::debug("Properties found in DAO", __CLASS__, __METHOD__, __LINE__);
@@ -319,8 +347,10 @@ class OpenM_Book_UserImpl extends OpenM_BookCommonsImpl implements OpenM_Book_Us
         $groupDAO = new OpenM_Book_GroupDAO();
         OpenM_Log::debug("create personal group in DAO", __CLASS__, __METHOD__, __LINE__);
         $group = $groupDAO->create("personnal");
+        OpenM_Log::debug("create birthday visibility group in DAO", __CLASS__, __METHOD__, __LINE__);
+        $groupVisibility = $groupDAO->create("birthday visibility");
         OpenM_Log::debug("create user in DAO", __CLASS__, __METHOD__, __LINE__);
-        $newUser = $userDAO->create($userUID, $firstName, $lastName, $birthDay, $mail, $group->get(OpenM_Book_GroupDAO::ID));
+        $newUser = $userDAO->create($userUID, $firstName, $lastName, $birthDay, $mail, $group->get(OpenM_Book_GroupDAO::ID), $groupVisibility->get(OpenM_Book_GroupDAO::ID));
 
         OpenM_Log::debug("index user", __CLASS__, __METHOD__, __LINE__);
         $searchDAO = new OpenM_Book_SearchDAO();

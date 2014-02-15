@@ -24,9 +24,9 @@ class OpenM_Book_Community_To_SectionDAO extends OpenM_Book_DAO {
      */
     public function create($groupId, $sectionId) {
         self::$db->request(OpenM_DB::insert($this->getTABLE(self::OPENM_BOOK_COMMUNITY_TO_SECTION_TABLE_NAME), array(
-                    self::COMMUNITY_ID => intval($groupId),
-                    self::SECTION_ID => intval($sectionId)
-                )));
+                    self::COMMUNITY_ID => intval("$groupId"),
+                    self::SECTION_ID => intval("$sectionId")
+        )));
 
         $return = new HashtableString();
         return $return->put(self::COMMUNITY_ID, $groupId)
@@ -35,28 +35,30 @@ class OpenM_Book_Community_To_SectionDAO extends OpenM_Book_DAO {
 
     public function delete($groupId, $sectionId = null) {
         $array = array(
-            self::COMMUNITY_ID => intval($groupId)
+            self::COMMUNITY_ID => intval("$groupId")
         );
         if ($sectionId != null)
-            $array[self::SECTION_ID] = $sectionId;
+            $array[self::SECTION_ID] = intval("$sectionId");
 
         self::$db->request(OpenM_DB::delete($this->getTABLE(self::OPENM_BOOK_COMMUNITY_TO_SECTION_TABLE_NAME), $array));
     }
 
     public function getFromGroup($groupId) {
         return self::$db->request_fetch_HashtableString(OpenM_DB::select($this->getTABLE(self::OPENM_BOOK_COMMUNITY_TO_SECTION_TABLE_NAME), array(
-                            self::COMMUNITY_ID => intval($groupId)
-                        )));
+                            self::COMMUNITY_ID => intval("$groupId")
+        )));
     }
 
     public function getFromSection($sectionId) {
         return self::$db->request_HashtableString(OpenM_DB::select($this->getTABLE(self::OPENM_BOOK_COMMUNITY_TO_SECTION_TABLE_NAME), array(
-                            self::SECTION_ID => intval($sectionId)
+                            self::SECTION_ID => intval("$sectionId")
                         )), self::COMMUNITY_ID);
     }
 
     public function getCommunityAncestors($communityId) {
-        $communityAncestors = OpenM_DB::select($this->getTABLE(self::OPENM_BOOK_COMMUNITY_TO_SECTION_TABLE_NAME), array(), array(self::COMMUNITY_ID))
+        $communityAncestors = OpenM_DB::select($this->getTABLE(self::OPENM_BOOK_COMMUNITY_TO_SECTION_TABLE_NAME), array(), array(
+                    self::COMMUNITY_ID
+                ))
                 . " WHERE "
                 . self::COMMUNITY_ID . " IN "
                 . "("

@@ -36,7 +36,7 @@ class OpenM_Book_GroupDAO extends OpenM_Book_DAO {
 
         $array = array(
             self::ID => $newId,
-            self::TYPE => intval($type),
+            self::TYPE => intval("$type"),
         );
 
         if ($name != null)
@@ -56,9 +56,10 @@ class OpenM_Book_GroupDAO extends OpenM_Book_DAO {
      * @return HashtableString 
      */
     public function get($groupId) {
-        return self::$db->request_fetch_HashtableString(OpenM_DB::select($this->getTABLE(self::OpenM_BOOK_GROUP_TABLE_NAME), array(
-                            self::ID => intval($groupId),
+        $return = self::$db->request_fetch_HashtableString(OpenM_DB::select($this->getTABLE(self::OpenM_BOOK_GROUP_TABLE_NAME), array(
+                    self::ID => intval("$groupId"),
         )));
+        return $return->put(self::NAME, self::$db->unescape($return->get(self::NAME)));
     }
 
     /**
@@ -75,17 +76,19 @@ class OpenM_Book_GroupDAO extends OpenM_Book_DAO {
         } else {
             $arrayArgument = array();
             if (is_null($name)) {
-                $arrayArgument[self::TYPE] = intval($type);
+                $arrayArgument[self::TYPE] = intval("$type");
             } else {
                 $name = self::$db->escape($name);
                 if (is_null($type)) {
                     $arrayArgument[self::NAME] = $name;
                 } else {
-                    $arrayArgument[self::TYPE] = intval($type);
+                    $arrayArgument[self::TYPE] = intval("$type");
                     $arrayArgument[self::NAME] = $name;
                 }
             }
-            self::$db->request(OpenM_DB::update($this->getTABLE(self::OpenM_BOOK_GROUP_TABLE_NAME), $arrayArgument, array(self::ID => $groupId)));
+            self::$db->request(OpenM_DB::update($this->getTABLE(self::OpenM_BOOK_GROUP_TABLE_NAME), $arrayArgument, array(
+                        self::ID => intval("$groupId")
+            )));
             return TRUE;
         }
     }
@@ -111,8 +114,9 @@ class OpenM_Book_GroupDAO extends OpenM_Book_DAO {
      * @return boolean
      */
     public function delete($groupId, $cascade = true) {
+        $groupId = intval("$groupId");
         self::$db->request(OpenM_DB::delete($this->getTABLE(self::OpenM_BOOK_GROUP_TABLE_NAME), array(
-                    self::ID => intval($groupId)
+                    self::ID => $groupId
         )));
 
         if ($cascade) {

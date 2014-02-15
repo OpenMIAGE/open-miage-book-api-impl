@@ -2,6 +2,7 @@
 
 Import::php("OpenM-Book.api.OpenM_Book_Moderator");
 Import::php("OpenM-Book.api.Impl.OpenM_BookCommonsImpl");
+Import::php("OpenM-Book.api.Impl.OpenM_Book_AdminImpl");
 
 /**
  * 
@@ -120,13 +121,25 @@ class OpenM_Book_ModeratorImpl extends OpenM_BookCommonsImpl implements OpenM_Bo
 
         OpenM_Log::debug("unindex old name of community", __CLASS__, __METHOD__, __LINE__);
         $groupSearchDAO = new OpenM_Book_SearchDAO();
-        $groupSearchDAO->unIndex($community->get(OpenM_Book_GroupDAO::NAME), $communityId, OpenM_Book_SearchDAO::TYPE_GENERIC_GROUP);
+        $groupSearchDAO->unIndex($communityId, OpenM_Book_SearchDAO::TYPE_GENERIC_GROUP);
 
         OpenM_Log::debug("update name of community", __CLASS__, __METHOD__, __LINE__);
         $groupDAO->update($communityId, $newName);
 
+        OpenM_Log::debug("search ancestors name of community", __CLASS__, __METHOD__, __LINE__);
+        $groupContentUserDAO = new OpenM_Book_Group_Content_GroupDAO();
+        $ancestors = $groupContentUserDAO->getCommunityAncestorNames($communityId);
+        $names = "";
+        $parent = $ancestors->get($communityId);
+        for ($i = 0; $i < OpenM_Book_AdminImpl::INDEXED_ANCESTOR_NAME_NUMBER; $i++) {
+            if ($parent === null)
+                break;
+            $names = $parent->get(OpenM_Book_GroupDAO::NAME) . " $names";
+            $c = $parent;
+            $parent = $ancestors->get($c->get(OpenM_Book_Group_Content_GroupDAO::GROUP_PARENT_ID));
+        }
         OpenM_Log::debug("index new name of community", __CLASS__, __METHOD__, __LINE__);
-        $groupSearchDAO->index($newName, $communityId, OpenM_Book_SearchDAO::TYPE_GENERIC_GROUP);
+        $groupSearchDAO->index("$names $newName", $communityId, OpenM_Book_SearchDAO::TYPE_GENERIC_GROUP);
 
         return $this->ok();
     }

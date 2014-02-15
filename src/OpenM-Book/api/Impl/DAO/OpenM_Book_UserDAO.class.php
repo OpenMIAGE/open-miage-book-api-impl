@@ -20,8 +20,8 @@ class OpenM_Book_UserDAO extends OpenM_Book_DAO {
     const LAST_NAME = "last_name";
     const PHOTO = "photo";
     const BIRTHDAY = "birthday";
-    const BIRTHDAY_DISPLAYED = "birthday_displayed";
     const BIRTHDAY_YEAR_DISPLAYED = "birthday_year_displayed";
+    const BIRTHDAY_VISIBILITY = "birthday_visibility";
     const ACTIVATED = "activated";
     const MAIL = "mail";
     const ACTIVE = 1;
@@ -31,22 +31,23 @@ class OpenM_Book_UserDAO extends OpenM_Book_DAO {
      * @param String $userUID
      * @param String $firstName
      * @param String $lastName
-     * @param String $personal_groupID
+     * @param String $personal_groupId
      * @return HashtableString
      */
-    public function create($userUID, $firstName, $lastName, $birthday, $mail, $personal_groupID, $activated = true) {
+    public function create($userUID, $firstName, $lastName, $birthday, $mail, $personal_groupId, $birthday_visibility_groupId, $activated = true) {
         $time = time();
         self::$db->request(OpenM_DB::insert($this->getTABLE(self::OpenM_Book_User_Table_Name), array(
                     self::UID => $userUID,
                     self::CREATION_TIME => $time,
                     self::UPDATE_TIME => $time,
-                    self::PERSONAL_GROUPS => intval($personal_groupID),
+                    self::PERSONAL_GROUPS => intval("$personal_groupId"),
                     self::FIRST_NAME => $firstName,
                     self::LAST_NAME => $lastName,
-                    self::BIRTHDAY => intval($birthday),
+                    self::BIRTHDAY => intval("$birthday"),
+                    self::BIRTHDAY_VISIBILITY => intval("$birthday_visibility_groupId"),
                     self::MAIL => $mail,
                     self::ACTIVATED => ($activated) ? 1 : 0
-                )));
+        )));
         return $this->getFromUID($userUID);
     }
 
@@ -58,7 +59,7 @@ class OpenM_Book_UserDAO extends OpenM_Book_DAO {
     public function getFromUID($userUID) {
         return self::$db->request_fetch_HashtableString(OpenM_DB::select($this->getTABLE(self::OpenM_Book_User_Table_Name), array(
                             self::UID => $userUID
-                        )));
+        )));
     }
 
     /**
@@ -69,7 +70,7 @@ class OpenM_Book_UserDAO extends OpenM_Book_DAO {
     public function get($userId) {
         return self::$db->request_fetch_HashtableString(OpenM_DB::select($this->getTABLE(self::OpenM_Book_User_Table_Name), array(
                             self::ID => $userId
-                        )));
+        )));
     }
 
     /**
@@ -84,8 +85,8 @@ class OpenM_Book_UserDAO extends OpenM_Book_DAO {
         self::$db->request(OpenM_DB::update($this->getTABLE(self::OpenM_Book_User_Table_Name), array(
                     self::UPDATE_TIME => $time
                         ), array(
-                    self::ID => $userId
-                )));
+                    self::ID => intval("$userId")
+        )));
         return TRUE;
     }
 
@@ -97,7 +98,7 @@ class OpenM_Book_UserDAO extends OpenM_Book_DAO {
         $array["$key"] = $value;
         self::$db->request(OpenM_DB::update($this->getTABLE(self::OpenM_Book_User_Table_Name), $array, array(
                     self::ID => $userId
-                )));
+        )));
     }
 
 }

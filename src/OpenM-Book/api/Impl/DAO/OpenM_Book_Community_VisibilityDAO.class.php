@@ -20,9 +20,9 @@ class OpenM_Book_Community_VisibilityDAO extends OpenM_Book_DAO {
 
     public function create($userId, $communityId, $communityVisibilityId) {
         self::$db->request(OpenM_DB::insert($this->getTABLE(self::OPENM_BOOK_COMMUNITY_VISIBILITY_TABLE_NAME), array(
-                    self::USER_ID => intval($userId),
-                    self::COMMUNITY_ID => intval($communityId),
-                    self::VISIBILITY_ID => intval($communityVisibilityId)
+                    self::USER_ID => intval("$userId"),
+                    self::COMMUNITY_ID => intval("$communityId"),
+                    self::VISIBILITY_ID => intval("$communityVisibilityId")
                 )));
 
         $return = new HashtableString();
@@ -33,27 +33,27 @@ class OpenM_Book_Community_VisibilityDAO extends OpenM_Book_DAO {
 
     public function delete($userId, $communityId) {
         self::$db->request(OpenM_DB::delete($this->getTABLE(self::OPENM_BOOK_COMMUNITY_VISIBILITY_TABLE_NAME), array(
-                    self::USER_ID => intval($userId),
-                    self::COMMUNITY_ID => intval($communityId)
+                    self::USER_ID => intval("$userId"),
+                    self::COMMUNITY_ID => intval("$communityId")
                 )));
     }
 
     public function deleteFromUser($userId) {
         self::$db->request(OpenM_DB::delete($this->getTABLE(self::OPENM_BOOK_COMMUNITY_VISIBILITY_TABLE_NAME), array(
-                    self::USER_ID => intval($userId)
+                    self::USER_ID => intval("$userId")
                 )));
     }
 
     public function deleteFromCommunity($groupId) {
         self::$db->request(OpenM_DB::delete($this->getTABLE(self::OPENM_BOOK_COMMUNITY_VISIBILITY_TABLE_NAME), array(
-                    self::COMMUNITY_ID => intval($groupId)
+                    self::COMMUNITY_ID => intval("$groupId")
                 )));
     }
 
     public function get($userId, $communityId) {
         return self::$db->request_fetch_HashtableString(OpenM_DB::select($this->getTABLE(self::OPENM_BOOK_COMMUNITY_VISIBILITY_TABLE_NAME), array(
-                            self::USER_ID => intval($userId),
-                            self::COMMUNITY_ID => intval($communityId)
+                            self::USER_ID => intval("$userId"),
+                            self::COMMUNITY_ID => intval("$communityId")
                         )));
     }
 }
