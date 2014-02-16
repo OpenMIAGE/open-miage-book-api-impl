@@ -111,7 +111,7 @@ class OpenM_Book_ModeratorImpl extends OpenM_BookCommonsImpl implements OpenM_Bo
         $sectionDAO = new OpenM_Book_SectionDAO();
         $section = $sectionDAO->getFromCommunity($communityId);
         OpenM_Log::debug("Constraints : '$newName' / '^" . $section->get(OpenM_Book_SectionDAO::REG_EXP) . "$'", __CLASS__, __METHOD__, __LINE__);
-        if (!$this->isAdmin && !RegExp::ereg("^" . $section->get(OpenM_Book_SectionDAO::REG_EXP) . "$", $newName))
+        if (!RegExp::ereg("^" . $section->get(OpenM_Book_SectionDAO::REG_EXP) . "$", $newName))
             return $this->error("you must respect names' constraints : " . $section->get(OpenM_Book_SectionDAO::REG_EXP));
 
         $groupDAO = new OpenM_Book_GroupDAO();

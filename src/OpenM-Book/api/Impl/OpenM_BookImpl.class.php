@@ -237,6 +237,8 @@ class OpenM_BookImpl extends OpenM_BookCommonsImpl implements OpenM_Book {
             if ($sectionChild->get(OpenM_Book_SectionDAO::ONLY_ONE_COMMUNITY)->toInt() == OpenM_Book_SectionDAO::ACTIVATED)
                 $return->put(self::RETURN_FORBIDDEN_TO_ADD_COMMUNITY_PARAMETER, self::TRUE_PARAMETER_VALUE);
             else {
+                OpenM_Log::debug("add section child name", __CLASS__, __METHOD__, __LINE__);
+                $return->put(self::RETURN_COMMUNITIES_CHILDS_FAMILY, $sectionChild->get(OpenM_Book_SectionDAO::NAME));
                 OpenM_Log::debug("check if user can add community", __CLASS__, __METHOD__, __LINE__);
                 if ($sectionChild->get(OpenM_Book_SectionDAO::USER_CAN_ADD_COMMUNITY)->toInt() == OpenM_Book_SectionDAO::ACTIVATED)
                     $return->put(self::RETURN_USER_CAN_ADD_COMMUNITY_PARAMETER, self::TRUE_PARAMETER_VALUE);
