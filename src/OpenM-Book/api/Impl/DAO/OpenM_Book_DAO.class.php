@@ -25,7 +25,7 @@ class OpenM_Book_DAO extends OpenM_DAO {
         $namePropertyTmp = $this->getSequencePropertyName();
         if ($namePropertyTmp !== null) {
             $p = Properties::fromFile(OpenM_ServiceImpl::CONFIG_FILE_NAME);
-            $p2 = Properties::fromFile($p->get($this->getDaoConfigFileName()));
+            $p2 = Properties::fromFile(dirname(OpenM_ServiceImpl::CONFIG_FILE_NAME) . "/" . $p->get($this->getDaoConfigFileName()));
             $sequence = $p2->get($namePropertyTmp);
             if ($sequence == null)
                 throw new OpenM_ServiceImplException("$namePropertyTmp not defined in " . $p->get($this->getDaoConfigFileName()));
