@@ -310,29 +310,29 @@ class OpenM_Book_UserImpl extends OpenM_BookCommonsImpl implements OpenM_Book_Us
                         ->put(self::RETURN_USER_FIRST_NAME_PARAMETER, $user->get(OpenM_Book_UserDAO::FIRST_NAME))
                         ->put(self::RETURN_USER_LAST_NAME_PARAMETER, $user->get(OpenM_Book_UserDAO::LAST_NAME));
     }
-
+    
     /**
      * OK
      */
     public function registerMe($firstName, $lastName, $birthDay, $mail) {
         if (!String::isString($firstName))
-            return $this->error("firstName must be a string");
+            return $this->error("firstName must be a string", self::RETURN_ERROR_CODE_FIRST_NAME_BAD_FORMAT_VALUE);
         if (!RegExp::preg("/^[a-zA-Z]([a-zA-Z]|[ \t])+[a-zA-Z]?$/", OpenM_Book_Tool::strlwr($firstName)))
-            return $this->error("firstName in bad format");
+            return $this->error("firstName in bad format", self::RETURN_ERROR_CODE_FIRST_NAME_BAD_FORMAT_VALUE);
         if (!String::isString($lastName))
-            return $this->error("lastName must be a string");
+            return $this->error("lastName must be a string", self::RETURN_ERROR_CODE_LAST_NAME_BAD_FORMAT_VALUE);
         if (!RegExp::preg("/^[a-zA-Z]([a-zA-Z]|[ \t])+[a-zA-Z]?$/", OpenM_Book_Tool::strlwr($lastName)))
-            return $this->error("lastName in bad format");
+            return $this->error("lastName in bad format", self::RETURN_ERROR_CODE_LAST_NAME_BAD_FORMAT_VALUE);
         if (!String::isString($birthDay) && !is_numeric($birthDay))
-            return $this->error("birthDay must be a string or a numeric");
+            return $this->error("birthDay must be a string or a numeric", self::RETURN_ERROR_CODE_BIRTHDAY_BAD_FORMAT_VALUE);
         if ($birthDay instanceof String)
             $birthDay = "$birthDay";
         if (!OpenM_MailTool::isEMailValid($mail))
-            return $this->error("mail must be in a valid format");
+            return $this->error("mail must be in a valid format", self::RETURN_ERROR_CODE_MAIL_BAD_FORMAT_VALUE);
         $birthDay = intval($birthDay);
         $birthDayDate = new Date($birthDay);
         if ($birthDayDate->compareTo(Date::now()->less(Delay::years(self::AGE_LIMIT_TO_REGISTER))) > 0)
-            return $this->error(self::RETURN_ERROR_MESSAGE_YOU_ARE_TOO_YOUNG_VALUE);
+            return $this->error(self::RETURN_ERROR_MESSAGE_YOU_ARE_TOO_YOUNG_VALUE, self::RETURN_ERROR_CODE_TO_YOUNG_VALUE);
 
         $userUID = $this->getManager()->getID();
 

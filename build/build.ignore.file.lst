@@ -1,3 +1,3 @@
 Config/OpenM-DAO.config.properties
 Config/OpenM-SSO.config.properties
-http/error_log
+*/error_log
