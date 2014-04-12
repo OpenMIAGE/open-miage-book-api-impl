@@ -386,6 +386,8 @@ class OpenM_GroupsImpl extends OpenM_BookCommonsImpl implements OpenM_Groups {
         if (!OpenM_Book_Tool::isGroupIdValid($groupId))
             return $this->error("groupId must be an integer");
 
+        $groupId = intval("$groupId");
+
         if (!$this->isUserRegistered())
             return $this->error;
         else
@@ -393,12 +395,15 @@ class OpenM_GroupsImpl extends OpenM_BookCommonsImpl implements OpenM_Groups {
 
         $groupContentGroupDAO = new OpenM_Book_Group_Content_GroupDAO();
         $userPropertyValueDAO = new OpenM_Book_User_Property_ValueDAO();
-        OpenM_Log::debug("check if group is visibility group of a user property value", __CLASS__, __METHOD__, __LINE__);
-        if (!$userPropertyValueDAO->isVisibilityFromUser($groupId, $user->get(OpenM_Book_UserDAO::ID))) {
-            OpenM_Log::debug("group is visibility group of a user property value", __CLASS__, __METHOD__, __LINE__);
-            OpenM_Log::debug("check if group user's personal group", __CLASS__, __METHOD__, __LINE__);
-            if (!$groupContentGroupDAO->isDescendant($groupId, $user->get(OpenM_Book_UserDAO::PERSONAL_GROUPS)))
-                return $this->error(self::RETURN_ERROR_MESSAGE_NOT_YOUR_PERSONAL_GROUP_VALUE);
+        OpenM_Log::debug("check if group is visibility group of user's birthday", __CLASS__, __METHOD__, __LINE__);
+        if ($this->user->get(OpenM_Book_UserDAO::BIRTHDAY_VISIBILITY)->toInt() !== $groupId) {
+            OpenM_Log::debug("check if group is visibility group of a user property value", __CLASS__, __METHOD__, __LINE__);
+            if (!$userPropertyValueDAO->isVisibilityFromUser($groupId, $user->get(OpenM_Book_UserDAO::ID))) {
+                OpenM_Log::debug("group is visibility group of a user property value", __CLASS__, __METHOD__, __LINE__);
+                OpenM_Log::debug("check if group user's personal group", __CLASS__, __METHOD__, __LINE__);
+                if (!$groupContentGroupDAO->isDescendant($groupId, $user->get(OpenM_Book_UserDAO::PERSONAL_GROUPS)))
+                    return $this->error(self::RETURN_ERROR_MESSAGE_NOT_YOUR_PERSONAL_GROUP_VALUE);
+            }
         }
 
         $groups = $groupContentGroupDAO->getChilds($groupId);

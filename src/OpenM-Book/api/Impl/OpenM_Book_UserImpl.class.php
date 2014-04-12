@@ -63,7 +63,9 @@ class OpenM_Book_UserImpl extends OpenM_BookCommonsImpl implements OpenM_Book_Us
         OpenM_Log::debug("update user update time in DAO", __CLASS__, __METHOD__, __LINE__);
         $userDAO->updateTime($user->get(OpenM_Book_UserDAO::ID));
 
-        return $this->ok()->put(self::RETURN_USER_PROPERTY_VALUE_ID_PARAMETER, $value->get(OpenM_Book_User_Property_ValueDAO::ID));
+        return $this->ok()
+                        ->put(self::RETURN_USER_PROPERTY_VALUE_ID_PARAMETER, $value->get(OpenM_Book_User_Property_ValueDAO::ID))
+                        ->put(self::RETURN_USER_PROPERTY_VALUE_VISIBILITY_PARAMETER, $value->get(OpenM_Book_User_Property_ValueDAO::VISIBILITY));
     }
 
     /**
@@ -281,6 +283,9 @@ class OpenM_Book_UserImpl extends OpenM_BookCommonsImpl implements OpenM_Book_Us
                 else
                     $return->put(self::RETURN_USER_BIRTHDAY_DISPLAY_YEAR_PARAMETER, self::FALSE_PARAMETER_VALUE);
             }
+
+            if ($isUserCalling)
+                $return->put(self::RETURN_USER_PROPERTY_VALUE_VISIBILITY_PARAMETER, $user->get(OpenM_Book_UserDAO::BIRTHDAY_VISIBILITY)->toInt());
 
             OpenM_Log::debug("Check user property in DAO", __CLASS__, __METHOD__, __LINE__);
             $userPropertiesValueDAO = new OpenM_Book_User_Property_ValueDAO();
