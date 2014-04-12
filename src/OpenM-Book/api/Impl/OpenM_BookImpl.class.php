@@ -471,6 +471,8 @@ class OpenM_BookImpl extends OpenM_BookCommonsImpl implements OpenM_Book {
         OpenM_Log::debug("search users not valid in DAO", __CLASS__, __METHOD__, __LINE__);
         $communityContentUserDAO = new OpenM_Book_Community_Content_UserDAO();
         $users = $communityContentUserDAO->getUsers($this->user->get(OpenM_Book_UserDAO::ID)->toInt(), $communityId, $start, $numberOfResult, false, $this->user->get(OpenM_Book_UserDAO::ID)->toInt());
+        if ($users->size() < $numberOfResult)
+            $me = $communityContentUserDAO->getMeNotValidIfImInCommunity($this->user->get(OpenM_Book_UserDAO::ID), $communityId, $start, $numberOfResult - $users->size());
         $userList = new HashtableString();
         $e = $users->enum();
         $i = 0;
@@ -484,6 +486,19 @@ class OpenM_BookImpl extends OpenM_BookCommonsImpl implements OpenM_Book {
                     ->put(self::RETURN_COMMUNITY_USER_ALREADY_ACCEPTED_BY_YOU, $user->get(OpenM_Book_Community_Content_UserDAO::NB_ACCEPTED)->toInt());
             $userList->put($i, $u);
             $i++;
+        }
+        if ($me->size() > 0) {
+            $e = $me->enum();
+            while ($e->hasNext()) {
+                $user = $e->next();
+                $u = new HashtableString();
+                $u->put(self::RETURN_USER_ID_PARAMETER, $user->get(OpenM_Book_UserDAO::ID)->toInt())
+                        ->put(self::RETURN_USER_NAME_PARAMETER, $user->get(OpenM_Book_UserDAO::FIRST_NAME) . " " . $user->get(OpenM_Book_UserDAO::LAST_NAME))
+                        ->put(self::RETURN_COMMUNITY_ID_PARAMETER, $user->get(OpenM_Book_Community_Content_UserDAO::COMMUNITY_ID)->toInt())
+                        ->put(self::RETURN_COMMUNITY_NAME_PARAMETER, $user->get(OpenM_Book_GroupDAO::NAME));
+                $userList->put($i, $u);
+                $i++;
+            }
         }
         OpenM_Log::debug("count all users valid in DAO", __CLASS__, __METHOD__, __LINE__);
         $count = $communityContentUserDAO->countOfUsers($communityId, false);

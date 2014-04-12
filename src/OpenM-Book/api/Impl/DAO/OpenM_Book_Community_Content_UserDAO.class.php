@@ -168,6 +168,31 @@ class OpenM_Book_Community_Content_UserDAO extends OpenM_Book_DAO {
                                 . $orderBy, $maxNbResult, $start));
     }
 
+    public function getMeNotValidIfImInCommunity($myId, $communityId, $start, $maxNbResult) {
+        $select = "SELECT u." . OpenM_Book_UserDAO::ID . ", u."
+                . OpenM_Book_UserDAO::FIRST_NAME . ", u." . OpenM_Book_UserDAO::LAST_NAME
+                . ", c." . self::COMMUNITY_ID . ", g." . OpenM_Book_GroupDAO::NAME;
+        $from = " FROM " . $this->getTABLE(OpenM_Book_UserDAO::OpenM_Book_User_Table_Name) . " u,"
+                . $this->getTABLE(OpenM_Book_GroupDAO::OpenM_BOOK_GROUP_TABLE_NAME) . " g,"
+                . $this->getTABLE(self::OPENM_BOOK_COMMUNITY_CONTENT_USER_TABLE_NAME) . " c";
+        $where = " WHERE u." . OpenM_Book_UserDAO::ID . "=c." . self::USER_ID
+                . " AND c." . self::COMMUNITY_ID . "=g." . OpenM_Book_GroupDAO::ID
+                . " AND u." . OpenM_Book_UserDAO::ID . "=$myId"
+                . " AND c." . self::IS_VALIDATED . "=" . self::NOT_VALIDATED
+                . " AND (c." . self::COMMUNITY_ID . " IN ("
+                . OpenM_DB::select($this->getTABLE(OpenM_Book_Group_Content_GroupDAO::OPENM_BOOK_GROUP_CONTENT_GROUP_INDEX_TABLE_NAME), array(
+                    OpenM_Book_Group_Content_GroupDAO::GROUP_PARENT_ID => $communityId
+                        ), array(
+                    OpenM_Book_Group_Content_GroupDAO::GROUP_ID
+                ))
+                . ")"
+                . " OR c." . self::COMMUNITY_ID . "=$communityId)";
+
+        return self::$db->request_ArrayList(self::$db->limit($select
+                                . $from
+                                . $where, $maxNbResult, $start));
+    }
+
 }
 
 ?>

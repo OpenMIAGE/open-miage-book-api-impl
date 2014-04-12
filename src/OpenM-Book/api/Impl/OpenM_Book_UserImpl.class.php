@@ -341,7 +341,9 @@ class OpenM_Book_UserImpl extends OpenM_BookCommonsImpl implements OpenM_Book_Us
         $birthDay = intval($birthDay);
         $birthDayDate = new Date($birthDay);
         if ($birthDayDate->compareTo(Date::now()->less(Delay::years(self::AGE_LIMIT_TO_REGISTER))) > 0)
-            return $this->error(self::RETURN_ERROR_MESSAGE_YOU_ARE_TOO_YOUNG_VALUE, self::RETURN_ERROR_CODE_TO_YOUNG_VALUE);
+            return $this->error(self::RETURN_ERROR_MESSAGE_YOU_ARE_TOO_YOUNG_VALUE, self::RETURN_ERROR_CODE_TOO_YOUNG_VALUE);
+        if ($birthDayDate->compareTo(Date::now()->less(Delay::years(self::AGE_MAX_TO_REGISTER))) < 0)
+            return $this->error(self::RETURN_ERROR_MESSAGE_YOU_ARE_TOO_OLD_VALUE, self::RETURN_ERROR_CODE_TOO_OLD_VALUE);
 
         $userUID = $this->getManager()->getID();
 
