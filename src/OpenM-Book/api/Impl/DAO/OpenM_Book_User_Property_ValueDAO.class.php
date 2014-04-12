@@ -66,13 +66,13 @@ class OpenM_Book_User_Property_ValueDAO extends OpenM_Book_DAO {
 
     private function _getProperties($userId) {
         $sql = "SELECT * FROM (SELECT * FROM ("
-                . "SELECT  p." . OpenM_Book_User_PropertyDAO::ID . " ," . OpenM_Book_User_PropertyDAO::NAME . " , " . self::ID . " ," . self::VALUE
+                . "SELECT  p." . OpenM_Book_User_PropertyDAO::ID . ", " . OpenM_Book_User_PropertyDAO::NAME . ", " . self::ID . ", " . self::VALUE . ", " . self::VISIBILITY
                 . " FROM " . $this->getTABLE(OpenM_Book_User_PropertyDAO::OPENM_BOOK_USER_PROPERTY_TABLE_NAME) . " as p, "
                 . $this->getTABLE(self::OPENM_BOOK_USER_PROPERTY_VALUE_TABLE_NAME) . " as v "
                 . "WHERE p." . OpenM_Book_User_PropertyDAO::ID . "=v." . self::PROPERTY_ID
                 . " AND " . self::USER_ID . "=$userId) as a"
                 . " UNION "
-                . "SELECT " . OpenM_Book_User_PropertyDAO::ID . "," . OpenM_Book_User_PropertyDAO::NAME . ", '', '' "
+                . "SELECT " . OpenM_Book_User_PropertyDAO::ID . "," . OpenM_Book_User_PropertyDAO::NAME . ", '', '', '' "
                 . " FROM " . $this->getTABLE(OpenM_Book_User_PropertyDAO::OPENM_BOOK_USER_PROPERTY_TABLE_NAME)
                 . " WHERE " . OpenM_Book_User_PropertyDAO::ID . " NOT IN "
                 . "(SELECT " . self::PROPERTY_ID
@@ -93,7 +93,7 @@ class OpenM_Book_User_Property_ValueDAO extends OpenM_Book_DAO {
         }
         return $return;
     }
-    
+
     public function getPropertiesOfUser($userId, $userIdCalling) {
         $sql = "SELECT  p." . OpenM_Book_User_PropertyDAO::ID . " ," . OpenM_Book_User_PropertyDAO::NAME . " , v." . self::ID . " , v." . self::VALUE
                 . " FROM " . $this->getTABLE(OpenM_Book_User_PropertyDAO::OPENM_BOOK_USER_PROPERTY_TABLE_NAME) . " p, "
@@ -138,6 +138,18 @@ class OpenM_Book_User_Property_ValueDAO extends OpenM_Book_DAO {
         if (intval("$userIdTarget") === intval("$userIdCalling"))
             return $this->_getProperties($userIdTarget);
         return $this->getPropertiesOfUser($userIdTarget, $userIdCalling);
+    }
+
+    public function isVisibilityFromUser($visibilityId, $userId) {
+        $sql = OpenM_DB::select($this->getTABLE(self::OPENM_BOOK_USER_PROPERTY_VALUE_TABLE_NAME), array(
+                    self::USER_ID => intval("$userId"),
+                    self::VISIBILITY => intval("$visibilityId"))
+        );
+        $result = self::$db->request($sql);
+        if (self::$db->fetch_array($result) !== false)
+            return true;
+        else
+            return false;
     }
 
     public function getSequencePropertyName() {

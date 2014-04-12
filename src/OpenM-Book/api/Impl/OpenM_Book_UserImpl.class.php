@@ -150,16 +150,16 @@ class OpenM_Book_UserImpl extends OpenM_BookCommonsImpl implements OpenM_Book_Us
         if (!RegExp::preg("/^-?[0-9]+$/", $propertyValueId))
             return $this->error("propertyValueId must be an int");
         $array = OpenM_MapConvertor::JSONToArray($visibilityGroupJSONList);
-        if($array===false)
+        if ($array === false)
             return $this->error("visibilityGroupJSONList is malformed");
 
         if ($this->isUserRegistered())
             $user = $this->user;
         else
             return $this->error;
-        
-        
-        
+
+
+
         return $this->ok();
     }
 
@@ -300,9 +300,9 @@ class OpenM_Book_UserImpl extends OpenM_BookCommonsImpl implements OpenM_Book_Us
                     $propertyValue->put(self::RETURN_USER_PROPERTY_NAME_PARAMETER, $value->get(OpenM_Book_User_PropertyDAO::NAME));
                     if ($value->get(OpenM_Book_User_Property_ValueDAO::ID) != "") {
                         $propertyValue->put(self::RETURN_USER_PROPERTY_VALUE_ID_PARAMETER, $value->get(OpenM_Book_User_Property_ValueDAO::ID)->toInt())
-                                ->put(self::RETURN_USER_PROPERTY_VALUE_PARAMETER, $value->get(OpenM_Book_User_Property_ValueDAO::VALUE))
-                        ->put(self::RETURN_USER_PROPERTY_V, $value->get(OpenM_Book_User_Property_ValueDAO::VALUE))
-                        
+                                ->put(self::RETURN_USER_PROPERTY_VALUE_PARAMETER, $value->get(OpenM_Book_User_Property_ValueDAO::VALUE));
+                        if (intval("$userId") === intval("$userIdCalling"))
+                            $propertyValue->put(self::RETURN_USER_PROPERTY_VALUE_VISIBILITY_PARAMETER, $value->get(OpenM_Book_User_Property_ValueDAO::VISIBILITY)->toInt());
                     }
                     $propertyList->put($i, $propertyValue);
                     $i++;
@@ -319,7 +319,7 @@ class OpenM_Book_UserImpl extends OpenM_BookCommonsImpl implements OpenM_Book_Us
                         ->put(self::RETURN_USER_FIRST_NAME_PARAMETER, $user->get(OpenM_Book_UserDAO::FIRST_NAME))
                         ->put(self::RETURN_USER_LAST_NAME_PARAMETER, $user->get(OpenM_Book_UserDAO::LAST_NAME));
     }
-    
+
     /**
      * OK
      */
