@@ -5,6 +5,7 @@ Import::php("OpenM-Book.api.Impl.OpenM_Book_AdminImpl");
 Import::php("OpenM-Book.api.OpenM_Book_Moderator");
 Import::php("OpenM-Book.api.Impl.OpenM_BookCommonsImpl");
 Import::php("OpenM-Mail.api.OpenM_MailTool");
+Import::php("util.JSON.OpenM_MapConvertor");
 
 /**
  * 
@@ -63,13 +64,6 @@ class OpenM_Book_UserImpl extends OpenM_BookCommonsImpl implements OpenM_Book_Us
         $userDAO->updateTime($user->get(OpenM_Book_UserDAO::ID));
 
         return $this->ok()->put(self::RETURN_USER_PROPERTY_VALUE_ID_PARAMETER, $value->get(OpenM_Book_User_Property_ValueDAO::ID));
-    }
-
-    /**
-     * @todo
-     */
-    public function getPropertyVisibility($propertyValueId) {
-        return $this->notImplemented();
     }
 
     /**
@@ -153,7 +147,20 @@ class OpenM_Book_UserImpl extends OpenM_BookCommonsImpl implements OpenM_Book_Us
      * @todo
      */
     public function setPropertyVisibility($propertyValueId, $visibilityGroupJSONList) {
-        return $this->notImplemented();
+        if (!RegExp::preg("/^-?[0-9]+$/", $propertyValueId))
+            return $this->error("propertyValueId must be an int");
+        $array = OpenM_MapConvertor::JSONToArray($visibilityGroupJSONList);
+        if($array===false)
+            return $this->error("visibilityGroupJSONList is malformed");
+
+        if ($this->isUserRegistered())
+            $user = $this->user;
+        else
+            return $this->error;
+        
+        
+        
+        return $this->ok();
     }
 
     /**
@@ -292,8 +299,10 @@ class OpenM_Book_UserImpl extends OpenM_BookCommonsImpl implements OpenM_Book_Us
                     $propertyValue->put(self::RETURN_USER_PROPERTY_ID_PARAMETER, $value->get(OpenM_Book_User_PropertyDAO::ID)->toInt());
                     $propertyValue->put(self::RETURN_USER_PROPERTY_NAME_PARAMETER, $value->get(OpenM_Book_User_PropertyDAO::NAME));
                     if ($value->get(OpenM_Book_User_Property_ValueDAO::ID) != "") {
-                        $propertyValue->put(self::RETURN_USER_PROPERTY_VALUE_ID_PARAMETER, $value->get(OpenM_Book_User_Property_ValueDAO::ID)->toInt());
-                        $propertyValue->put(self::RETURN_USER_PROPERTY_VALUE_PARAMETER, $value->get(OpenM_Book_User_Property_ValueDAO::VALUE));
+                        $propertyValue->put(self::RETURN_USER_PROPERTY_VALUE_ID_PARAMETER, $value->get(OpenM_Book_User_Property_ValueDAO::ID)->toInt())
+                                ->put(self::RETURN_USER_PROPERTY_VALUE_PARAMETER, $value->get(OpenM_Book_User_Property_ValueDAO::VALUE))
+                        ->put(self::RETURN_USER_PROPERTY_V, $value->get(OpenM_Book_User_Property_ValueDAO::VALUE))
+                        
                     }
                     $propertyList->put($i, $propertyValue);
                     $i++;
