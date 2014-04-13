@@ -151,14 +151,28 @@ class OpenM_Book_UserImpl extends OpenM_BookCommonsImpl implements OpenM_Book_Us
     public function setPropertyVisibility($propertyValueId, $visibilityGroupJSONList) {
         if (!RegExp::preg("/^-?[0-9]+$/", $propertyValueId))
             return $this->error("propertyValueId must be an int");
+        $propertyValueId = intval("$propertyValueId");
         $array = OpenM_MapConvertor::JSONToArray($visibilityGroupJSONList);
         if ($array === false)
             return $this->error("visibilityGroupJSONList is malformed");
+        $visibilities = OpenM_MapConvertor::arrayToMap($array);
 
         if ($this->isUserRegistered())
             $user = $this->user;
         else
             return $this->error;
+
+        OpenM_Log::debug("check if property value is birthady", __CLASS__, __METHOD__, __LINE__);
+        if ($propertyValueId == self::BIRTHDAY_ID_PROPERTY_VALUE_ID)
+            $visibilityGroup = $this->user->get(OpenM_Book_UserDAO::BIRTHDAY_VISIBILITY)->toInt();
+        else {
+            OpenM_Log::debug("check if property value is user's property", __CLASS__, __METHOD__, __LINE__);
+            $userPropertyValueDAO = new OpenM_Book_User_Property_ValueDAO();
+            $value = $userPropertyValueDAO->get($propertyValueId);
+            if ($value->get(OpenM_Book_User_Property_ValueDAO::USER_ID) != $this->user->get(OpenM_Book_UserDAO::ID))
+                return $this->error("not your property");
+            $visibilityGroup = $value->get(OpenM_Book_User_Property_ValueDAO::VISIBILITY);
+        }
 
 
 
