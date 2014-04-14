@@ -202,15 +202,15 @@ class OpenM_Book_UserImpl extends OpenM_BookCommonsImpl implements OpenM_Book_Us
         OpenM_Log::debug("remove group", __CLASS__, __METHOD__, __LINE__);
         $k = $groupToDelete->enum();
         while ($k->hasNext())
-            $groupContentGroupDAO->delete($visibilityGroup, $k->next(), true);
+            $groupContentGroupDAO->delete($visibilityGroup, $k->next());
 
         /**
-         * no verification on groupId
+         * /!\ no verification on groupId /!\
          */
         OpenM_Log::debug("add group", __CLASS__, __METHOD__, __LINE__);
         $l = $groupToAdd->enum();
         while ($l->hasNext())
-            $groupContentGroupDAO->create($visibilityGroup, $l->next());
+            $groupContentGroupDAO->create($visibilityGroup, $l->next(), false);
 
         return $this->ok();
     }
@@ -275,7 +275,7 @@ class OpenM_Book_UserImpl extends OpenM_BookCommonsImpl implements OpenM_Book_Us
         else
             return $this->error;
 
-        $userIdCalling = $user->get(OpenM_Book_UserDAO::ID);
+        $userIdCalling = $user->get(OpenM_Book_UserDAO::ID)->toInt();
 
         if ($userId == null) {
             OpenM_Log::debug("user calling is the targeted user", __CLASS__, __METHOD__, __LINE__);
@@ -289,7 +289,7 @@ class OpenM_Book_UserImpl extends OpenM_BookCommonsImpl implements OpenM_Book_Us
             if ($user == null)
                 return $this->error(self::RETURN_ERROR_MESSAGE_USER_NOT_FOUND_VALUE);
             OpenM_Log::debug("the targeted user is found in DAO", __CLASS__, __METHOD__, __LINE__);
-            $userId = $user->get(OpenM_Book_UserDAO::ID);
+            $userId = $user->get(OpenM_Book_UserDAO::ID)->toInt();
         }
 
         $return = $this->ok();
@@ -313,9 +313,16 @@ class OpenM_Book_UserImpl extends OpenM_BookCommonsImpl implements OpenM_Book_Us
             if ($isUserCalling)
                 $return->put(self::RETURN_USER_BIRTHDAY_PARAMETER, $date->toString("d/m/Y"));
             else {
+                OpenM_Log::debug("recover group allowed to see birthday", __CLASS__, __METHOD__, __LINE__);
+                $groupContentGroupDAO = new OpenM_Book_Group_Content_GroupDAO();
+                $childs = $groupContentGroupDAO->getChilds($user->get(OpenM_Book_UserDAO::BIRTHDAY_VISIBILITY));
+                $visibilities = new ArrayList();
+                $e = $childs->keys();
+                while ($e->hasNext())
+                    $visibilities->add($e->next());
                 $groupContentUserDAO = new OpenM_Book_Group_Content_UserDAO();
                 OpenM_Log::debug("Check if user can view birthday", __CLASS__, __METHOD__, __LINE__);
-                if ($groupContentUserDAO->isUserInGroup($userId, $user->get(OpenM_Book_UserDAO::BIRTHDAY_VISIBILITY)->toInt())) {
+                if ($groupContentUserDAO->isUserInGroups($userId, $visibilities->toArray())) {
                     $birthdayDisplayed = true;
                     if ($user->get(OpenM_Book_UserDAO::BIRTHDAY_YEAR_DISPLAYED)->toInt() == OpenM_Book_UserDAO::ACTIVE)
                         $return->put(self::RETURN_USER_BIRTHDAY_PARAMETER, $date->toString("d/m/Y"));

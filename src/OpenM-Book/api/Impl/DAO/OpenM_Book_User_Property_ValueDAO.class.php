@@ -126,12 +126,18 @@ class OpenM_Book_User_Property_ValueDAO extends OpenM_Book_DAO {
                     OpenM_Book_Community_Content_UserDAO::COMMUNITY_ID
                 )) . " WHERE " . OpenM_Book_Community_Content_UserDAO::USER_ID . "=$userId"
                 . " AND " . OpenM_Book_Community_Content_UserDAO::IS_VALIDATED . "=" . OpenM_Book_Community_Content_UserDAO::VALIDATED;
-        return "SELECT " . OpenM_Book_Group_Content_GroupDAO::GROUP_PARENT_ID
+        return OpenM_DB::select($this->getTABLE(OpenM_Book_Group_Content_GroupDAO::OPENM_BOOK_GROUP_CONTENT_GROUP_TABLE_NAME), array(), array(
+                    OpenM_Book_Group_Content_GroupDAO::GROUP_PARENT_ID
+                ))
+                . " WHERE " . OpenM_Book_Group_Content_GroupDAO::GROUP_ID . " IN "
+                . "(SELECT " . OpenM_Book_Group_Content_GroupDAO::GROUP_PARENT_ID
                 . " FROM " . $this->getTABLE(OpenM_Book_Group_Content_GroupDAO::OPENM_BOOK_GROUP_CONTENT_GROUP_INDEX_TABLE_NAME) . " g "
-                . " WHERE g." . OpenM_Book_Group_Content_GroupDAO::GROUP_PARENT_ID
+                . " WHERE g." . OpenM_Book_Group_Content_GroupDAO::GROUP_ID
                 . " IN ($in) "
                 . " UNION "
-                . $in;
+                . $in
+                . ")"
+                . " UNION $in";
     }
 
     public function getFromUser($userIdTarget, $userIdCalling = null) {
