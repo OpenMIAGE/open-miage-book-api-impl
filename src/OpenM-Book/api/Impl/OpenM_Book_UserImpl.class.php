@@ -146,16 +146,20 @@ class OpenM_Book_UserImpl extends OpenM_BookCommonsImpl implements OpenM_Book_Us
     }
 
     /**
-     * @todo
+     * @todo in progress
      */
     public function setPropertyVisibility($propertyValueId, $visibilityGroupJSONList) {
         if (!RegExp::preg("/^-?[0-9]+$/", $propertyValueId))
             return $this->error("propertyValueId must be an int");
         $propertyValueId = intval("$propertyValueId");
         $array = OpenM_MapConvertor::JSONToArray($visibilityGroupJSONList);
-        if ($array === false)
+        if ($array === null)
             return $this->error("visibilityGroupJSONList is malformed");
-        $visibilities = OpenM_MapConvertor::arrayToMap($array);
+        foreach ($array as $value) {
+            if (!is_numeric($value))
+                return $this->error("visibilityGroupJSONList is malformed");
+        }
+        $visibilities = ArrayList::from($array);
 
         if ($this->isUserRegistered())
             $user = $this->user;
@@ -174,7 +178,39 @@ class OpenM_Book_UserImpl extends OpenM_BookCommonsImpl implements OpenM_Book_Us
             $visibilityGroup = $value->get(OpenM_Book_User_Property_ValueDAO::VISIBILITY);
         }
 
+        $groupToAdd = new ArrayList();
+        $groupToDelete = new ArrayList();
 
+        $groupContentGroupDAO = new OpenM_Book_Group_Content_GroupDAO();
+        $childs = $groupContentGroupDAO->getChilds($visibilityGroup);
+
+        OpenM_Log::debug("found group to delete", __CLASS__, __METHOD__, __LINE__);
+        $e = $childs->keys();
+        while ($e->hasNext()) {
+            $g = $e->next();
+            if (!$visibilities->contains($g))
+                $groupToDelete->add($g);
+        }
+        OpenM_Log::debug("found group to add", __CLASS__, __METHOD__, __LINE__);
+        $j = $visibilities->enum();
+        while ($j->hasNext()) {
+            $g = $j->next();
+            if (!$childs->containsKey($g))
+                $groupToAdd->add($g);
+        }
+
+        OpenM_Log::debug("remove group", __CLASS__, __METHOD__, __LINE__);
+        $k = $groupToDelete->enum();
+        while ($k->hasNext())
+            $groupContentGroupDAO->delete($visibilityGroup, $k->next(), true);
+
+        /**
+         * no verification on groupId
+         */
+        OpenM_Log::debug("add group", __CLASS__, __METHOD__, __LINE__);
+        $l = $groupToAdd->enum();
+        while ($l->hasNext())
+            $groupContentGroupDAO->create($visibilityGroup, $l->next());
 
         return $this->ok();
     }
